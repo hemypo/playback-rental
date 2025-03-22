@@ -34,13 +34,12 @@ const queryClient = new QueryClient({
   },
 });
 
-// Wrap the entire app in React.StrictMode to help identify problems
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
         <Navbar />
         <main className="pt-16">
           <Suspense fallback={<Loading />}>
@@ -56,8 +55,8 @@ const App = () => (
             </Routes>
           </Suspense>
         </main>
-      </TooltipProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 

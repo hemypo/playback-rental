@@ -26,30 +26,21 @@ import { BookingCalendar } from '@/components/BookingCalendar';
 import PricingCalculator from '@/components/PricingCalculator';
 import BitrixService, { BookingPeriod } from '@/services/bitrixService';
 import { formatDateRange } from '@/utils/dateUtils';
-import { useToast } from "@/hooks/use-toast";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [booking, setBooking] = useState<{ startDate?: Date; endDate?: Date }>({});
   const [addingToCart, setAddingToCart] = useState(false);
-  const { toast } = useToast();
 
-  const { data: product, isLoading, error } = useQuery({
+  // Fetch product details
+  const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
     queryFn: () => BitrixService.getProductById(id || ''),
-    meta: {
-      onError: (err: Error) => {
-        console.error("Error fetching product:", err);
-        toast({
-          title: "Error",
-          description: "Failed to load product details. Please try again later.",
-          variant: "destructive",
-        });
-      }
-    }
+    onError: () => navigate('/catalog'),
   });
 
+  // Fetch product bookings
   const { data: bookings } = useQuery({
     queryKey: ['bookings', id],
     queryFn: () => BitrixService.getProductBookings(id || ''),
@@ -78,18 +69,6 @@ const ProductDetail = () => {
     return (
       <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
         <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <h2 className="heading-2 mb-4">Product Not Found</h2>
-        <p className="mb-6">The product you're looking for doesn't exist or has been removed.</p>
-        <Button asChild>
-          <Link to="/catalog">Back to Catalog</Link>
-        </Button>
       </div>
     );
   }

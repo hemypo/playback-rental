@@ -21,14 +21,12 @@ export interface Product {
 interface ProductCardProps {
   product: Product;
   className?: string;
-  onClick?: () => void;
   onAddToCart?: (productId: string) => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ 
   product, 
   className,
-  onClick,
   onAddToCart
 }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -55,7 +53,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         <div className={cn(
@@ -83,7 +80,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
       
       <div className="p-5">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-medium text-lg line-clamp-1">{product.title}</h3>
+          <Link to={`/product/${product.id}`} className="hover:underline">
+            <h3 className="font-medium text-lg line-clamp-1">{product.title}</h3>
+          </Link>
         </div>
         
         <p className="text-sm text-muted-foreground line-clamp-2 mb-4 h-10">
@@ -112,10 +111,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               size="icon" 
               className="rounded-full"
               disabled={!product.available || isAdded}
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent triggering parent onClick
-                handleAddToCart();
-              }}
+              onClick={handleAddToCart}
             >
               <AnimatedTransition show={!isAdded} unmountOnExit={false}>
                 <PlusIcon className="h-4 w-4" />

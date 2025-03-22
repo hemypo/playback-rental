@@ -65,20 +65,3 @@ export const calculateRentalPrice = (
     dayDiscount,
   };
 };
-
-/**
- * Formats rental duration in a human-readable way
- */
-export const formatRentalDuration = (hours: number): string => {
-  const days = Math.floor(hours / 24);
-  const remainingHours = hours % 24;
-  
-  if (days === 0) {
-    return `${remainingHours} hour${remainingHours !== 1 ? 's' : ''}`;
-  } else if (remainingHours === 0) {
-    return `${days} day${days !== 1 ? 's' : ''}`;
-  } else {
-    return `${days} day${days !== 1 ? 's' : ''} and ${remainingHours} hour${remainingHours !== 1 ? 's' : ''}`;
-  }
-};
-
