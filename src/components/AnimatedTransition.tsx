@@ -13,7 +13,7 @@ interface AnimatedTransitionProps {
   unmountOnExit?: boolean;
 }
 
-export const AnimatedTransition: React.FC<AnimatedTransitionProps> = ({
+const AnimatedTransition: React.FC<AnimatedTransitionProps> = ({
   children,
   show,
   type = 'fade',
@@ -28,7 +28,8 @@ export const AnimatedTransition: React.FC<AnimatedTransitionProps> = ({
     if (show) {
       setShouldRender(true);
       // Small delay to ensure DOM is ready for animation
-      setTimeout(() => setIsAnimating(true), 10);
+      const timer = setTimeout(() => setIsAnimating(true), 10);
+      return () => clearTimeout(timer);
     } else {
       setIsAnimating(false);
       if (unmountOnExit) {
