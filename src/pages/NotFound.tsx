@@ -23,21 +23,21 @@ const NotFound = () => {
         
         <h1 className="text-6xl font-bold mb-4">404</h1>
         <p className="text-xl text-muted-foreground mb-8">
-          Oops! The page you're looking for doesn't exist or has been moved.
+        Упс! Страница, которую вы ищете, не существует или была перемещена.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button asChild size="lg" variant="default">
             <Link to="/">
               <HomeIcon className="mr-2 h-4 w-4" />
-              Go to Homepage
+              Вернуться на главную
             </Link>
           </Button>
           
           <Button asChild size="lg" variant="outline">
             <Link to="/catalog">
               <ArrowLeftIcon className="mr-2 h-4 w-4" />
-              Browse Catalog
+              Смотреть каталог
             </Link>
           </Button>
         </div>

@@ -91,11 +91,11 @@ const ProductDetail = () => {
         <Breadcrumb className="mb-8">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/">Home</BreadcrumbLink>
+              <BreadcrumbLink href="/">Главная</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href="/catalog">Catalog</BreadcrumbLink>
+              <BreadcrumbLink href="/catalog">Каталог</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -121,7 +121,7 @@ const ProductDetail = () => {
             
             {!product.available && (
               <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                <Badge variant="destructive" className="px-4 py-2 text-base">Currently Unavailable</Badge>
+                <Badge variant="destructive" className="px-4 py-2 text-base">Забронирован</Badge>
               </div>
             )}
           </AnimatedTransition>
@@ -136,7 +136,7 @@ const ProductDetail = () => {
               <h1 className="text-3xl md:text-4xl font-semibold mb-2">{product.title}</h1>
               <p className="text-xl mb-4">
                 <span className="font-semibold">${product.price}</span>
-                <span className="text-muted-foreground">/day</span>
+                <span className="text-muted-foreground">/в сутки</span>
               </p>
               <p className="text-muted-foreground">{product.description}</p>
             </div>
@@ -144,7 +144,7 @@ const ProductDetail = () => {
             <Separator />
 
             <div className="space-y-6">
-              <h3 className="text-lg font-medium">Book This Equipment</h3>
+              <h3 className="text-lg font-medium">Заказать оборудование</h3>
               
               <BookingCalendar
                 onBookingChange={handleBookingChange}
@@ -168,7 +168,7 @@ const ProductDetail = () => {
                 {addingToCart ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Processing...
+                    в процессе...
                   </>
                 ) : (
                   <>
@@ -184,9 +184,9 @@ const ProductDetail = () => {
         <div className="mt-16">
           <Tabs defaultValue="details">
             <TabsList className="mb-8">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="specifications">Specifications</TabsTrigger>
-              <TabsTrigger value="availability">Availability</TabsTrigger>
+              <TabsTrigger value="details">Подробности</TabsTrigger>
+              <TabsTrigger value="specifications">Характеристики</TabsTrigger>
+              <TabsTrigger value="availability">Доступность</TabsTrigger>
             </TabsList>
             
             <TabsContent value="details" className="space-y-6">
@@ -196,24 +196,24 @@ const ProductDetail = () => {
                     <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10">
                       <PackageIcon className="h-5 w-5 text-primary" />
                     </div>
-                    <h3 className="font-medium">Rental Includes</h3>
+                    <h3 className="font-medium">Аренда включает в себя</h3>
                   </div>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
                       <CheckIcon className="h-4 w-4 text-green-500" />
-                      <span>Carrying case</span>
+                      <span>Чехол для переноски</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckIcon className="h-4 w-4 text-green-500" />
-                      <span>Basic accessories</span>
+                      <span>Основные аксессуары</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckIcon className="h-4 w-4 text-green-500" />
-                      <span>User manual</span>
+                      <span>Руководство пользователя</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckIcon className="h-4 w-4 text-green-500" />
-                      <span>Technical support</span>
+                      <span>Техническая поддержка</span>
                     </li>
                   </ul>
                 </div>
@@ -223,23 +223,23 @@ const ProductDetail = () => {
                     <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10">
                       <ClockIcon className="h-5 w-5 text-primary" />
                     </div>
-                    <h3 className="font-medium">Rental Pricing</h3>
+                    <h3 className="font-medium">Стоимость аренды</h3>
                   </div>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
-                      <span className="text-muted-foreground">4 hours:</span>
+                      <span className="text-muted-foreground">4 часа:</span>
                       <span className="font-medium">${(product.price * 0.7).toFixed(2)}</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <span className="text-muted-foreground">1 day:</span>
+                      <span className="text-muted-foreground">Сутки:</span>
                       <span className="font-medium">${product.price.toFixed(2)}</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <span className="text-muted-foreground">3+ days:</span>
+                      <span className="text-muted-foreground">от 3-ех суток:</span>
                       <span className="font-medium">${(product.price * 0.9).toFixed(2)}/day</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <span className="text-muted-foreground">5+ days:</span>
+                      <span className="text-muted-foreground">от 5 дней:</span>
                       <span className="font-medium">${(product.price * 0.7).toFixed(2)}/day</span>
                     </li>
                   </ul>
@@ -250,21 +250,21 @@ const ProductDetail = () => {
                     <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10">
                       <CalendarIcon className="h-5 w-5 text-primary" />
                     </div>
-                    <h3 className="font-medium">Availability</h3>
+                    <h3 className="font-medium">Доступность</h3>
                   </div>
                   {product.available ? (
                     <div className="text-green-600 font-medium flex items-center gap-2 mb-4">
                       <CheckIcon className="h-4 w-4" />
-                      <span>Available for Rental</span>
+                      <span>Доступно для аренды</span>
                     </div>
                   ) : (
-                    <div className="text-red-500 font-medium mb-4">Currently Unavailable</div>
+                    <div className="text-red-500 font-medium mb-4">Забронирован</div>
                   )}
                   
                   <div className="text-sm text-muted-foreground">
                     {bookings && bookings.length > 0 ? (
                       <div>
-                        <p className="mb-2">Upcoming bookings:</p>
+                        <p className="mb-2">Предстоящее бронирование:</p>
                         <ul className="space-y-2">
                           {bookings.slice(0, 3).map((booking: BookingPeriod, index: number) => (
                             <li key={index} className="text-xs bg-secondary p-2 rounded">
@@ -274,14 +274,14 @@ const ProductDetail = () => {
                         </ul>
                       </div>
                     ) : (
-                      <p>No upcoming bookings.</p>
+                      <p>Нет предстоящего бронирования.</p>
                     )}
                   </div>
                 </div>
               </div>
               
               <div className="p-6 rounded-xl glass-card">
-                <h3 className="font-medium mb-4">Description</h3>
+                <h3 className="font-medium mb-4">Описание</h3>
                 <p className="text-muted-foreground">
                   {product.description}
                 </p>
@@ -293,59 +293,14 @@ const ProductDetail = () => {
               </div>
             </TabsContent>
             
-            <TabsContent value="specifications">
-              <div className="p-6 rounded-xl glass-card">
-                <h3 className="font-medium mb-6">Technical Specifications</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="text-sm font-medium mb-3">General</h4>
-                    <ul className="space-y-3">
-                      <li className="flex justify-between pb-2 border-b border-border">
-                        <span className="text-muted-foreground">Brand</span>
-                        <span className="font-medium">Premium Tech</span>
-                      </li>
-                      <li className="flex justify-between pb-2 border-b border-border">
-                        <span className="text-muted-foreground">Model</span>
-                        <span className="font-medium">X-2000</span>
-                      </li>
-                      <li className="flex justify-between pb-2 border-b border-border">
-                        <span className="text-muted-foreground">Year</span>
-                        <span className="font-medium">2023</span>
-                      </li>
-                    </ul>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium mb-3">Physical</h4>
-                    <ul className="space-y-3">
-                      <li className="flex justify-between pb-2 border-b border-border">
-                        <span className="text-muted-foreground">Weight</span>
-                        <span className="font-medium">1.2 kg</span>
-                      </li>
-                      <li className="flex justify-between pb-2 border-b border-border">
-                        <span className="text-muted-foreground">Dimensions</span>
-                        <span className="font-medium">15 x 10 x 8 cm</span>
-                      </li>
-                      <li className="flex justify-between pb-2 border-b border-border">
-                        <span className="text-muted-foreground">Color</span>
-                        <span className="font-medium">Black</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
             <TabsContent value="availability">
               <div className="p-6 rounded-xl glass-card">
-                <h3 className="font-medium mb-6">Availability Calendar</h3>
+                <h3 className="font-medium mb-6">Календарь бронирования.</h3>
                 
                 {product.available ? (
                   <div className="space-y-6">
                     <p className="text-muted-foreground">
-                      This equipment is currently available for rental. Check the calendar below to see
-                      booked dates. Gray dates are unavailable.
+                      Этот товар забронирован. Посмотрите календарь бронирования для выбора свободной даты.
                     </p>
                     
                     <div className="max-w-md mx-auto">
@@ -360,12 +315,12 @@ const ProductDetail = () => {
                     <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <CalendarIcon className="h-8 w-8 text-red-500" />
                     </div>
-                    <h3 className="text-xl font-medium mb-2">Currently Unavailable</h3>
+                    <h3 className="text-xl font-medium mb-2">В настоящее время недоступен.</h3>
                     <p className="text-muted-foreground mb-6">
-                      This equipment is not available for rental at the moment.
+                    В данный момент это оборудование недоступно для проката.
                     </p>
                     <Button asChild>
-                      <Link to="/catalog">Browse Alternative Options</Link>
+                      <Link to="/catalog">Просмотрите альтернативные варианты</Link>
                     </Button>
                   </div>
                 )}

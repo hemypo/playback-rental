@@ -10,9 +10,9 @@ const HowItWorks = () => {
       {/* Hero Section */}
       <section className="bg-primary text-white py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="heading-1 mb-6">How Our Rental Service Works</h1>
+          <h1 className="heading-1 mb-6">Как мы работаем</h1>
           <p className="text-xl text-white/90 max-w-2xl mx-auto">
-            Renting professional equipment has never been easier. Follow our simple process to get the gear you need for your next project.
+          Аренда профессионального оборудования еще никогда не была такой простой. Следуйте нашему простому процессу, чтобы приобрести оборудование, необходимое для вашего следующего проекта.
           </p>
         </div>
       </section>
@@ -25,44 +25,44 @@ const HowItWorks = () => {
               {[
                 {
                   step: 1,
-                  title: "Browse Our Catalog",
-                  description: "Explore our extensive collection of professional equipment. Filter by category or search for specific items.",
+                  title: "Просмотрите наш каталог",
+                  description: "Ознакомьтесь с нашей обширной коллекцией профессионального оборудования. Отфильтруйте по категориям или выполните поиск по конкретным позициям.",
                   icon: <PackageIcon className="h-10 w-10 text-primary" />,
                 },
                 {
                   step: 2,
-                  title: "Check Availability",
-                  description: "View the availability calendar for your selected equipment to ensure it's available during your desired rental period.",
+                  title: "Проверьте наличие свободной техники",
+                  description: "Просмотрите календарь доступности выбранного вами оборудования, чтобы убедиться, что оно доступно в течение желаемого периода аренды",
                   icon: <CalendarIcon className="h-10 w-10 text-primary" />,
                 },
                 {
                   step: 3,
-                  title: "Select Rental Period",
-                  description: "Choose your rental period with our flexible options: 4 hours, 1 day, 3 days, or 5+ days. Enjoy discounts on longer rentals.",
+                  title: "Выберите период аренды",
+                  description: "Выберите свой срок аренды с помощью наших гибких опций: 4 часа, 1 день, 3 дня или более 5 дней. Воспользуйтесь скидками при длительной аренде.",
                   icon: <ClockIcon className="h-10 w-10 text-primary" />,
                 },
                 {
                   step: 4,
-                  title: "Complete Booking",
-                  description: "Provide your details and complete the booking process. You'll receive a confirmation email with all the information.",
+                  title: "Полное бронирование",
+                  description: "Укажите свои данные и завершите процесс бронирования. Вы получите электронное письмо с подтверждением бронирования и всей необходимой информацией.",
                   icon: <UserIcon className="h-10 w-10 text-primary" />,
                 },
                 {
                   step: 5,
-                  title: "Pickup Equipment",
-                  description: "Visit our location to pick up your equipment. Our staff will help you get set up and answer any questions.",
+                  title: "Оборудование для подбора персонала",
+                  description: "Посетите наш офис, чтобы забрать свое оборудование. Наши сотрудники помогут вам настроиться и ответят на любые вопросы.",
                   icon: <MapPinIcon className="h-10 w-10 text-primary" />,
                 },
                 {
                   step: 6,
-                  title: "Create Your Project",
-                  description: "Use our professional equipment for your project with confidence. We provide technical support if needed.",
+                  title: "Создайте Свой проект",
+                  description: "Используйте наше профессиональное оборудование для вашего проекта с уверенностью. При необходимости мы оказываем техническую поддержку.",
                   icon: <CameraIcon className="h-10 w-10 text-primary" />,
                 },
                 {
                   step: 7,
-                  title: "Return Equipment",
-                  description: "Return the equipment at the end of your rental period. Our staff will check it and complete the process.",
+                  title: "Верните оборудованиеt",
+                  description: "Верните оборудование по истечении срока аренды. Наши сотрудники проверят его и завершат процесс.",
                   icon: <CheckSquareIcon className="h-10 w-10 text-primary" />,
                 },
               ].map((step, index) => (
@@ -92,37 +92,37 @@ const HowItWorks = () => {
       <section className="py-20 bg-secondary/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="heading-2 mb-4">Our Rental Pricing</h2>
+            <h2 className="heading-2 mb-4">Наши цены на аренду</h2>
             <p className="body-text max-w-2xl mx-auto">
-              We offer flexible rental periods with competitive pricing. Enjoy discounts on longer rentals.
+              Мы предлагаем гибкие сроки аренды по конкурентоспособным ценам. Воспользуйтесь скидками при длительной аренде.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {[
               {
-                period: "4 Hours",
-                description: "Perfect for short shoots and quick projects",
-                price: "70% of daily rate",
-                feature: "Same-day rental"
+                period: "4 часа",
+                description: "Идеально подходит для коротких съемок и быстрых проектов",
+                price: "70% от дневной нормы",
+                feature: "Аренда в тот же день"
               },
               {
-                period: "1 Day",
-                description: "Our standard rental period for most projects",
-                price: "Base daily rate",
-                feature: "24-hour rental period"
+                period: "1 день",
+                description: "Наш стандартный срок аренды для большинства проектов",
+                price: "Базовая дневная ставка",
+                feature: "срок аренды - 24 часа"
               },
               {
-                period: "3 Days",
-                description: "Ideal for weekend projects and events",
-                price: "10% discount per day",
-                feature: "Extended shooting time"
+                period: "3 дня",
+                description: "Идеально подходит для проектов и мероприятий выходного дня",
+                price: "скидка 10% в день",
+                feature: "Увеличенное время съемки"
               },
               {
-                period: "5+ Days",
-                description: "For longer productions and special projects",
-                price: "30% discount per day",
-                feature: "Maximum savings"
+                period: "Более 5 дней",
+                description: "Для длительных съемок и специальных проектов",
+                price: "скидка 30% в день",
+                feature: "Максимальная экономия"
               }
             ].map((option, index) => (
               <Card key={index} className="p-6 text-center">
@@ -145,33 +145,33 @@ const HowItWorks = () => {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="heading-2 mb-4">Frequently Asked Questions</h2>
+            <h2 className="heading-2 mb-4">Часто задаваемые вопросы</h2>
             <p className="body-text max-w-2xl mx-auto">
-              Have questions about our rental process? Find answers to common questions below.
+             У вас есть вопросы о процессе аренды? Ниже вы найдете ответы на часто задаваемые вопросы.
             </p>
           </div>
 
           <div className="max-w-3xl mx-auto space-y-6">
             {[
               {
-                question: "Do you require a deposit for equipment rental?",
-                answer: "Yes, we require a security deposit that is fully refundable upon return of the equipment in good condition. The deposit amount varies depending on the equipment value."
+                question: "Требуется ли вам внести залог за аренду оборудования?",
+                answer: "Да, мы требуем внести страховой залог, который полностью возвращается при возврате оборудования в хорошем состоянии. Сумма залога варьируется в зависимости от стоимости оборудования."
               },
               {
-                question: "What happens if I return the equipment late?",
-                answer: "Late returns are charged at the daily rate. We recommend contacting us in advance if you need to extend your rental period, as this may be accommodated at a discounted rate."
+                question: "Что произойдет, если я верну оборудование с опозданием?",
+                answer: "Поздний возврат оплачивается по ежедневному тарифу. Мы рекомендуем связаться с нами заранее, если вам необходимо продлить срок аренды, так как это может быть сделано со скидкой."
               },
               {
-                question: "Do you offer delivery services?",
-                answer: "Yes, we offer delivery for an additional fee based on distance. Please contact us for a quote on delivery to your location."
+                question: "Вы предлагаете услуги доставки?",
+                answer: "Да, мы предлагаем доставку за дополнительную плату в зависимости от расстояния. Пожалуйста, свяжитесь с нами, чтобы узнать стоимость доставки в ваше местоположение."
               },
               {
-                question: "What identification is required for rental?",
-                answer: "We require a valid government-issued photo ID and a credit card in the same name. For businesses, we may require additional documentation."
+                question: "Какие документы, удостоверяющие личность, требуются для аренды?",
+                answer: "Нам требуется действительное удостоверение личности с фотографией государственного образца и кредитная карта на то же имя. Для юридических лиц мы можем потребовать дополнительные документы."
               },
               {
-                question: "Is rental insurance required?",
-                answer: "We offer equipment protection plans that cover accidental damage. While not mandatory, we strongly recommend this coverage for peace of mind."
+                question: "Требуется ли страховка при аренде?",
+                answer: "Мы предлагаем планы защиты оборудования, которые покрывают случайное повреждение. Хотя это и не является обязательным, мы настоятельно рекомендуем использовать это покрытие для вашего спокойствия."
               }
             ].map((faq, index) => (
               <div key={index} className="p-6 rounded-xl glass-card">
@@ -186,12 +186,12 @@ const HowItWorks = () => {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary/90 to-primary text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="heading-2 mb-6">Ready to Rent Equipment?</h2>
+          <h2 className="heading-2 mb-6">Готовы арендовать оборудование?</h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Browse our catalog now to find the perfect equipment for your next project.
+            Просмотрите наш каталог прямо сейчас, чтобы найти идеальное оборудование для вашего следующего проекта.
           </p>
           <Button size="lg" variant="default" asChild className="bg-white text-primary hover:bg-white/90">
-            <Link to="/catalog">Browse Equipment Catalog</Link>
+            <Link to="/catalog">Просмотр каталога оборудования</Link>
           </Button>
         </div>
       </section>

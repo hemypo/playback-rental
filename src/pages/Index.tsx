@@ -48,13 +48,13 @@ const Index = () => {
         
         <div className="container relative z-10 px-4 py-16 mx-auto">
           <AnimatedTransition show={true} type="slide-up" className="max-w-xl">
-            <h1 className="heading-1 text-white mb-6">Professional Equipment on Demand</h1>
+            <h1 className="heading-1 text-white mb-6">Playback Rental</h1>
             <p className="text-xl text-white/90 mb-8">
-              Rent high-quality equipment for your projects. From cameras to audio gear, we have everything you need.
+            Современная и профессиональная фото- и видеотехника, включая новейшие модели и классические решения, доступные для аренды на гибких и выгодных условиях.
             </p>
             
             <div className="w-full glass-panel p-6 rounded-xl">
-              <h2 className="text-lg font-medium mb-4">Find Available Equipment</h2>
+              <h2 className="text-lg font-medium mb-4">Найдите доступное оборудование</h2>
               <BookingCalendar onBookingChange={handleBookingChange} />
               
               <Button 
@@ -63,7 +63,7 @@ const Index = () => {
                 disabled={!bookingPeriod.startDate || !bookingPeriod.endDate}
                 onClick={handleSearchClick}
               >
-                Search Available Equipment
+                Поиск доступного оборудования
                 <ArrowRightIcon className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -75,11 +75,10 @@ const Index = () => {
       <section className="py-20">
         <div className="container px-4 mx-auto">
           <div className="flex flex-col items-center text-center mb-12">
-            <span className="chip mb-3">Browse Our Categories</span>
-            <h2 className="heading-2 mb-4">Equipment for Every Need</h2>
+            <span className="chip mb-3">Категории</span>
+            <h2 className="heading-2 mb-4">Оборудование для любых нужд</h2>
             <p className="body-text max-w-2xl">
-              Explore our wide range of professional equipment categories. We offer the latest technology for photography, video production, audio recording, and more.
-            </p>
+            Ознакомьтесь с нашим широким ассортиментом профессионального оборудования. Мы предлагаем новейшие технологии для фотосъемки, производства видео, аудиозаписи и многого другого.            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -119,12 +118,12 @@ const Index = () => {
         <div className="container px-4 mx-auto">
           <div className="flex justify-between items-end mb-12">
             <div>
-              <span className="chip mb-3">Handpicked Selection</span>
-              <h2 className="heading-2">Featured Equipment</h2>
+              <span className="chip mb-3">Тщательно подобранный выбор</span>
+              <h2 className="heading-2">Рекомендуемое оборудование</h2>
             </div>
             <Link to="/catalog">
               <Button variant="outline" className="group">
-                View All
+              Посмотреть все
                 <ArrowRightIcon className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
@@ -148,10 +147,10 @@ const Index = () => {
       <section className="py-20">
         <div className="container px-4 mx-auto">
           <div className="flex flex-col items-center text-center mb-12">
-            <span className="chip mb-3">Simple Process</span>
-            <h2 className="heading-2 mb-4">How Rental Works</h2>
+            <span className="chip mb-3">Простой процесс</span>
+            <h2 className="heading-2 mb-4">Как работает аренда</h2>
             <p className="body-text max-w-2xl">
-              Renting equipment with us is a simple and hassle-free process. Follow these steps to get the gear you need for your next project.
+            Аренда оборудования у нас - это простой и беспроблемный процесс. Выполните следующие действия, чтобы приобрести оборудование, необходимое для вашего следующего проекта.
             </p>
           </div>
 
@@ -189,16 +188,16 @@ const Index = () => {
       <section className="py-20 bg-gradient-to-r from-primary/90 to-primary text-white">
         <div className="container px-4 mx-auto">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="heading-2 mb-6">Ready to Rent Top-Quality Equipment?</h2>
+            <h2 className="heading-2 mb-6">Готовы арендовать высококачественное оборудование?</h2>
             <p className="text-xl text-white/90 mb-8">
-              Start browsing our catalog now to find the perfect equipment for your next project.
+            Начните просматривать наш каталог прямо сейчас, чтобы найти идеальное оборудование для вашего проекта.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" variant="default" asChild className="bg-white text-primary hover:bg-white/90">
-                <Link to="/catalog">Browse Catalog</Link>
+                <Link to="/catalog">Каталог</Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="border-white text-white hover:bg-white/10">
-                <Link to="/contact">Contact Us</Link>
+                <Link to="/contact">Контакты</Link>
               </Button>
             </div>
           </div>

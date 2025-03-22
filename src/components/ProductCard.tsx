@@ -73,7 +73,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         
         {!product.available && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-            <Badge variant="destructive" className="px-3 py-1.5">Currently Unavailable</Badge>
+            <Badge variant="destructive" className="px-3 py-1.5">Недоступен для бронирования</Badge>
           </div>
         )}
       </div>
@@ -91,8 +91,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
         
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-lg font-semibold">${product.price}/day</p>
-            <p className="text-xs text-muted-foreground">from ${(product.price * 0.7).toFixed(2)}/4h</p>
+            <p className="text-lg font-semibold">{product.price}/в день</p>
+            <p className="text-xs text-muted-foreground">от {(product.price * 0.7).toFixed(2)}/4 часа</p>
           </div>
           
           <div className="flex gap-2">
