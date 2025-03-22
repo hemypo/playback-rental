@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -25,13 +26,14 @@ import { BookingCalendar } from '@/components/BookingCalendar';
 import PricingCalculator from '@/components/PricingCalculator';
 import BitrixService, { BookingPeriod } from '@/services/bitrixService';
 import { formatDateRange } from '@/utils/dateUtils';
-import { toast } from 'react-toastify';
+import { useToast } from "@/hooks/use-toast";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [booking, setBooking] = useState<{ startDate?: Date; endDate?: Date }>({});
   const [addingToCart, setAddingToCart] = useState(false);
+  const { toast } = useToast();
 
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
