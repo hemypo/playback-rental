@@ -10,6 +10,29 @@ import BitrixService from '@/services/bitrixService';
 import { useToast } from "@/hooks/use-toast";
 import { useTransition, animated } from 'react-spring';
 
+// Move AnimatedTransition outside of Index component to avoid Rules of Hooks violations
+const ProductsGrid = ({ products, onProductClick }) => {
+  const transitions = useTransition(products, {
+    from: { opacity: 0, transform: 'translate3d(0,40px,0)' },
+    enter: { opacity: 1, transform: 'translate3d(0,0px,0)' },
+    leave: { opacity: 0, transform: 'translate3d(0,40px,0)' },
+    config: { mass: 1, tension: 280, friction: 60 },
+    keys: (product) => product?.id,
+  });
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {transitions((style, item) => (
+        item ? (
+          <animated.div style={style} key={item.id}>
+            <ProductCard product={item} onClick={() => onProductClick(item.id)} />
+          </animated.div>
+        ) : null
+      ))}
+    </div>
+  );
+};
+
 const Index = () => {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
@@ -64,28 +87,6 @@ const Index = () => {
     navigate(`/product/${productId}`);
   };
 
-  const AnimatedTransition = () => {
-    const transitions = useTransition(products, {
-      from: { opacity: 0, transform: 'translate3d(0,40px,0)' },
-      enter: { opacity: 1, transform: 'translate3d(0,0px,0)' },
-      leave: { opacity: 0, transform: 'translate3d(0,40px,0)' },
-      config: { mass: 1, tension: 280, friction: 60 },
-      keys: (product) => product?.id,
-    });
-
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {transitions((style, item) => (
-          item ? (
-            <animated.div style={style} key={item.id}>
-              <ProductCard product={item} onClick={() => handleProductClick(item.id)} />
-            </animated.div>
-          ) : null
-        ))}
-      </div>
-    );
-  };
-
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-4">Equipment Rental</h1>
@@ -118,7 +119,7 @@ const Index = () => {
       ) : error ? (
         <p>Error: {error.message}</p>
       ) : (
-        <AnimatedTransition />
+        <ProductsGrid products={products} onProductClick={handleProductClick} />
       )}
     </div>
   );
