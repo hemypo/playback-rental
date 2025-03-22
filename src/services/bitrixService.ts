@@ -1,12 +1,11 @@
-
 /**
- * This is a mock service for Bitrix24 integration
- * In a real implementation, this would be replaced with actual API calls to Bitrix24
+ * Bitrix24 integration service
  */
 
 import { Product } from '@/components/ProductCard';
+import { toast } from '@/hooks/use-toast';
 
-// This would come from Bitrix24 in a real implementation
+// The mock products will be used as fallback if the API fails
 const MOCK_PRODUCTS: Product[] = [
   {
     id: '1',
@@ -90,7 +89,7 @@ export interface BookingPeriod {
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
 }
 
-// Mock bookings data
+// Mock bookings data will be used as fallback
 const MOCK_BOOKINGS: BookingPeriod[] = [
   {
     productId: '1',
@@ -108,7 +107,7 @@ const MOCK_BOOKINGS: BookingPeriod[] = [
   },
 ];
 
-// Mock categories
+// Mock categories will be used as fallback
 const MOCK_CATEGORIES = [
   { id: '1', name: 'Photography' },
   { id: '2', name: 'Video' },
@@ -126,86 +125,341 @@ export interface BitrixService {
   getAvailableProducts: (startDate: Date, endDate: Date) => Promise<Product[]>;
 }
 
-// Simulating API latency
+// Simulate API latency
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const BitrixService: BitrixService = {
-  getProducts: async (options = {}) => {
-    // Simulate API call delay
-    await delay(800);
+// Configuration for Bitrix24 API
+interface BitrixConfig {
+  domain: string; // e.g., "yourcompany.bitrix24.com"
+  token?: string; // REST API token if using access token auth
+}
+
+// Initialize config from localStorage or defaults
+const getConfig = (): BitrixConfig => {
+  const savedConfig = localStorage.getItem('bitrixConfig');
+  return savedConfig ? JSON.parse(savedConfig) : { domain: '' };
+};
+
+// Save config to localStorage
+const saveConfig = (config: BitrixConfig) => {
+  localStorage.setItem('bitrixConfig', JSON.stringify(config));
+};
+
+// Check if integration is configured
+const isConfigured = (): boolean => {
+  const config = getConfig();
+  return Boolean(config.domain);
+};
+
+/**
+ * Make a request to the Bitrix24 REST API
+ */
+const callBitrix24Api = async (method: string, params: Record<string, any> = {}): Promise<any> => {
+  try {
+    const config = getConfig();
     
-    let filteredProducts = [...MOCK_PRODUCTS];
-    
-    // Apply category filter if provided
-    if (options.category) {
-      filteredProducts = filteredProducts.filter(
-        product => product.category.toLowerCase() === options.category?.toLowerCase()
-      );
+    if (!config.domain) {
+      throw new Error('Bitrix24 integration not configured');
     }
     
-    // Apply search filter if provided
-    if (options.search) {
-      const searchLower = options.search.toLowerCase();
-      filteredProducts = filteredProducts.filter(
-        product => 
-          product.title.toLowerCase().includes(searchLower) ||
-          product.description.toLowerCase().includes(searchLower) ||
-          product.category.toLowerCase().includes(searchLower)
-      );
+    let url = `https://${config.domain}/rest/${method}`;
+    
+    // Add authentication parameters
+    if (config.token) {
+      url += `?auth=${config.token}`;
     }
     
-    return filteredProducts;
-  },
-  
-  getProductById: async (id: string) => {
-    await delay(500);
-    return MOCK_PRODUCTS.find(product => product.id === id) || null;
-  },
-  
-  getCategories: async () => {
-    await delay(300);
-    return MOCK_CATEGORIES;
-  },
-  
-  getProductBookings: async (productId: string) => {
-    await delay(500);
-    return MOCK_BOOKINGS.filter(booking => booking.productId === productId);
-  },
-  
-  createBooking: async (booking: Omit<BookingPeriod, 'status'>) => {
-    await delay(1000);
-    const newBooking: BookingPeriod = {
-      ...booking,
-      status: 'pending',
-    };
-    
-    // In a real implementation, this would send the data to Bitrix24
-    console.log('Creating booking:', newBooking);
-    
-    return newBooking;
-  },
-  
-  getAvailableProducts: async (startDate: Date, endDate: Date) => {
-    await delay(800);
-    
-    // Check which products are available in the given date range
-    return MOCK_PRODUCTS.filter(product => {
-      if (!product.available) return false;
-      
-      // Check if the product is already booked during this period
-      const productBookings = MOCK_BOOKINGS.filter(
-        booking => booking.productId === product.id && booking.status !== 'cancelled'
-      );
-      
-      const isBooked = productBookings.some(
-        booking => 
-          (startDate >= booking.startDate && startDate < booking.endDate) || 
-          (endDate > booking.startDate && endDate <= booking.endDate) ||
-          (startDate <= booking.startDate && endDate >= booking.endDate)
-      );
-      
-      return !isBooked;
+    // Make the request
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
     });
+    
+    if (!response.ok) {
+      throw new Error(`Bitrix24 API error: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    // Bitrix24 returns errors in a successful response
+    if (data.error) {
+      throw new Error(`Bitrix24 API error: ${data.error_description || data.error}`);
+    }
+    
+    return data.result;
+  } catch (error) {
+    console.error('Bitrix24 API call failed:', error);
+    toast({
+      title: 'Bitrix24 Error',
+      description: error instanceof Error ? error.message : 'Failed to connect to Bitrix24',
+      variant: 'destructive',
+    });
+    throw error;
+  }
+};
+
+/**
+ * Map Bitrix24 product data to our Product interface
+ */
+const mapBitrixProductToProduct = (bitrixProduct: any): Product => {
+  return {
+    id: bitrixProduct.ID || String(bitrixProduct.id),
+    title: bitrixProduct.NAME || bitrixProduct.name,
+    description: bitrixProduct.DESCRIPTION || bitrixProduct.description || '',
+    price: parseFloat(bitrixProduct.PRICE || bitrixProduct.price || 0),
+    category: bitrixProduct.SECTION_NAME || bitrixProduct.category || 'Uncategorized',
+    imageUrl: bitrixProduct.DETAIL_PICTURE_URL || bitrixProduct.imageUrl || 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000&auto=format&fit=crop',
+    available: bitrixProduct.AVAILABLE !== false,
+  };
+};
+
+/**
+ * The actual BitrixService implementation
+ */
+const BitrixService: BitrixService & { 
+  configure: (config: BitrixConfig) => void;
+  isConfigured: () => boolean;
+} = {
+  /**
+   * Configure the Bitrix24 integration
+   */
+  configure: (config: BitrixConfig) => {
+    saveConfig(config);
+    toast({
+      title: 'Bitrix24 Integration',
+      description: 'Configuration saved successfully',
+    });
+  },
+  
+  /**
+   * Check if Bitrix24 is configured
+   */
+  isConfigured,
+  
+  /**
+   * Get products with optional filtering
+   */
+  getProducts: async (options = {}) => {
+    try {
+      if (!isConfigured()) {
+        return MOCK_PRODUCTS;
+      }
+      
+      // Call Bitrix24 API to get catalog items
+      const result = await callBitrix24Api('catalog.product.list', {
+        filter: options.category ? { SECTION_NAME: options.category } : {},
+        select: ['ID', 'NAME', 'DESCRIPTION', 'PRICE', 'SECTION_NAME', 'DETAIL_PICTURE_URL', 'AVAILABLE'],
+      });
+      
+      let products = (result?.products || []).map(mapBitrixProductToProduct);
+      
+      // Apply search filter if provided
+      if (options.search && products.length > 0) {
+        const searchLower = options.search.toLowerCase();
+        products = products.filter(
+          product => 
+            product.title.toLowerCase().includes(searchLower) ||
+            product.description.toLowerCase().includes(searchLower) ||
+            product.category.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return products;
+    } catch (error) {
+      console.error('Failed to get products from Bitrix24:', error);
+      // Fall back to mock data
+      return MOCK_PRODUCTS;
+    }
+  },
+  
+  /**
+   * Get a single product by ID
+   */
+  getProductById: async (id: string) => {
+    try {
+      if (!isConfigured()) {
+        return MOCK_PRODUCTS.find(product => product.id === id) || null;
+      }
+      
+      const result = await callBitrix24Api('catalog.product.get', {
+        id: parseInt(id, 10),
+      });
+      
+      return result ? mapBitrixProductToProduct(result) : null;
+    } catch (error) {
+      console.error('Failed to get product from Bitrix24:', error);
+      // Fall back to mock data
+      return MOCK_PRODUCTS.find(product => product.id === id) || null;
+    }
+  },
+  
+  /**
+   * Get all product categories
+   */
+  getCategories: async () => {
+    try {
+      if (!isConfigured()) {
+        return MOCK_CATEGORIES;
+      }
+      
+      const result = await callBitrix24Api('catalog.section.list', {
+        select: ['ID', 'NAME'],
+      });
+      
+      return (result || []).map((section: any) => ({
+        id: section.ID || String(section.id),
+        name: section.NAME || section.name,
+      }));
+    } catch (error) {
+      console.error('Failed to get categories from Bitrix24:', error);
+      // Fall back to mock data
+      return MOCK_CATEGORIES;
+    }
+  },
+  
+  /**
+   * Get bookings for a specific product
+   */
+  getProductBookings: async (productId: string) => {
+    try {
+      if (!isConfigured()) {
+        return MOCK_BOOKINGS.filter(booking => booking.productId === productId);
+      }
+      
+      // This would need to be implemented based on your Bitrix24 CRM structure
+      // Here's an example assuming you have a custom CRM field for product bookings
+      const result = await callBitrix24Api('crm.deal.list', {
+        filter: { 'UF_CRM_PRODUCT_ID': productId },
+        select: ['ID', 'UF_CRM_START_DATE', 'UF_CRM_END_DATE', 'UF_CRM_CUSTOMER_ID', 'STAGE_ID'],
+      });
+      
+      return (result || []).map((deal: any) => {
+        // Map Bitrix24 deal stages to booking statuses
+        let status: BookingPeriod['status'] = 'pending';
+        if (deal.STAGE_ID === 'WON') status = 'confirmed';
+        else if (deal.STAGE_ID === 'COMPLETED') status = 'completed';
+        else if (deal.STAGE_ID === 'LOSE') status = 'cancelled';
+        
+        return {
+          productId,
+          customerId: deal.UF_CRM_CUSTOMER_ID || 'unknown',
+          startDate: new Date(deal.UF_CRM_START_DATE),
+          endDate: new Date(deal.UF_CRM_END_DATE),
+          status,
+        };
+      });
+    } catch (error) {
+      console.error('Failed to get bookings from Bitrix24:', error);
+      // Fall back to mock data
+      return MOCK_BOOKINGS.filter(booking => booking.productId === productId);
+    }
+  },
+  
+  /**
+   * Create a new booking in Bitrix24
+   */
+  createBooking: async (booking: Omit<BookingPeriod, 'status'>) => {
+    try {
+      if (!isConfigured()) {
+        const newBooking: BookingPeriod = {
+          ...booking,
+          status: 'pending',
+        };
+        console.log('Creating mock booking:', newBooking);
+        return newBooking;
+      }
+      
+      // Create a deal in Bitrix24 CRM
+      const result = await callBitrix24Api('crm.deal.add', {
+        fields: {
+          TITLE: `Equipment Rental - Product ID: ${booking.productId}`,
+          CATEGORY_ID: 1, // You might need to adjust this to your CRM structure
+          STAGE_ID: 'NEW',
+          UF_CRM_PRODUCT_ID: booking.productId,
+          UF_CRM_CUSTOMER_ID: booking.customerId,
+          UF_CRM_START_DATE: booking.startDate.toISOString(),
+          UF_CRM_END_DATE: booking.endDate.toISOString(),
+        },
+      });
+      
+      return {
+        ...booking,
+        status: 'pending',
+      };
+    } catch (error) {
+      console.error('Failed to create booking in Bitrix24:', error);
+      toast({
+        title: 'Booking Error',
+        description: 'Could not create booking in Bitrix24. Please try again.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  },
+  
+  /**
+   * Get products that are available for booking in a date range
+   */
+  getAvailableProducts: async (startDate: Date, endDate: Date) => {
+    try {
+      // First get all products
+      const allProducts = await BitrixService.getProducts();
+      
+      if (!isConfigured()) {
+        // Use mock logic for availability checks
+        return allProducts.filter(product => {
+          if (!product.available) return false;
+          
+          // Check if the product is already booked during this period
+          const productBookings = MOCK_BOOKINGS.filter(
+            booking => booking.productId === product.id && booking.status !== 'cancelled'
+          );
+          
+          const isBooked = productBookings.some(
+            booking => 
+              (startDate >= booking.startDate && startDate < booking.endDate) || 
+              (endDate > booking.startDate && endDate <= booking.endDate) ||
+              (startDate <= booking.startDate && endDate >= booking.endDate)
+          );
+          
+          return !isBooked;
+        });
+      }
+      
+      // This would need custom implementation in Bitrix24
+      // For each product, check if it's available in the date range
+      const availableProducts: Product[] = [];
+      
+      for (const product of allProducts) {
+        if (!product.available) continue;
+        
+        // Get bookings for this product
+        const bookings = await BitrixService.getProductBookings(product.id);
+        
+        // Check if product is already booked during this period
+        const isBooked = bookings.some(
+          booking => 
+            booking.status !== 'cancelled' && (
+              (startDate >= booking.startDate && startDate < booking.endDate) || 
+              (endDate > booking.startDate && endDate <= booking.endDate) ||
+              (startDate <= booking.startDate && endDate >= booking.endDate)
+            )
+        );
+        
+        if (!isBooked) {
+          availableProducts.push(product);
+        }
+      }
+      
+      return availableProducts;
+    } catch (error) {
+      console.error('Failed to check available products:', error);
+      // Fall back to mock data
+      return MOCK_PRODUCTS.filter(product => product.available);
+    }
   },
 };
 
