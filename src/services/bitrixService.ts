@@ -1,3 +1,4 @@
+
 /**
  * Bitrix24 integration service
  */
@@ -134,14 +135,32 @@ interface BitrixConfig {
   token?: string; // REST API token if using access token auth
 }
 
-// Initialize config from localStorage or defaults
+// Get configuration from environment variables or fallback to localStorage for development
 const getConfig = (): BitrixConfig => {
+  // Try to get from environment variables first
+  const envDomain = import.meta.env.VITE_BITRIX_DOMAIN;
+  const envToken = import.meta.env.VITE_BITRIX_TOKEN;
+  
+  if (envDomain) {
+    return {
+      domain: envDomain,
+      token: envToken,
+    };
+  }
+  
+  // Fallback to localStorage for development or if env vars are not set
   const savedConfig = localStorage.getItem('bitrixConfig');
   return savedConfig ? JSON.parse(savedConfig) : { domain: '' };
 };
 
-// Save config to localStorage
+// Save config to localStorage (only used in development when env vars aren't set)
 const saveConfig = (config: BitrixConfig) => {
+  // If environment variables are set, just log a message
+  if (import.meta.env.VITE_BITRIX_DOMAIN) {
+    console.log('Environment variables are being used for Bitrix24 configuration. Local changes will not persist.');
+    return;
+  }
+  
   localStorage.setItem('bitrixConfig', JSON.stringify(config));
 };
 

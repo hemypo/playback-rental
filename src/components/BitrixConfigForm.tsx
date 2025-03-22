@@ -1,12 +1,13 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import BitrixService from '@/services/bitrixService';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface BitrixConfigFormProps {
   onSaved?: () => void;
@@ -17,9 +18,39 @@ const BitrixConfigForm = ({ onSaved }: BitrixConfigFormProps) => {
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [usingEnvVars, setUsingEnvVars] = useState(false);
+  
+  useEffect(() => {
+    // Check if environment variables are being used
+    const isUsingEnvVars = Boolean(import.meta.env.VITE_BITRIX_DOMAIN);
+    setUsingEnvVars(isUsingEnvVars);
+    
+    // If not using env vars, populate form with saved values
+    if (!isUsingEnvVars) {
+      const savedConfig = localStorage.getItem('bitrixConfig');
+      if (savedConfig) {
+        const config = JSON.parse(savedConfig);
+        setDomain(config.domain || '');
+        setToken(config.token || '');
+      }
+    } else {
+      // If using env vars, show masked values
+      setDomain(import.meta.env.VITE_BITRIX_DOMAIN || '');
+      setToken(import.meta.env.VITE_BITRIX_TOKEN ? '••••••••' : '');
+    }
+  }, []);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (usingEnvVars) {
+      toast({
+        title: 'Environment Variables Used',
+        description: 'Configuration is managed via environment variables and cannot be changed here.',
+      });
+      return;
+    }
+    
     setLoading(true);
     setTestResult(null);
     
@@ -71,6 +102,16 @@ const BitrixConfigForm = ({ onSaved }: BitrixConfigFormProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {usingEnvVars && (
+          <Alert className="mb-6 bg-blue-50">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Configuration is managed via environment variables (VITE_BITRIX_DOMAIN and VITE_BITRIX_TOKEN). 
+              To change the configuration, update these variables in your deployment environment.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="domain">Bitrix24 Domain</Label>
@@ -80,6 +121,7 @@ const BitrixConfigForm = ({ onSaved }: BitrixConfigFormProps) => {
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
               required
+              disabled={usingEnvVars}
             />
             <p className="text-sm text-muted-foreground">
               Enter your Bitrix24 domain without https://
@@ -94,6 +136,7 @@ const BitrixConfigForm = ({ onSaved }: BitrixConfigFormProps) => {
               placeholder="Enter your REST API token"
               value={token}
               onChange={(e) => setToken(e.target.value)}
+              disabled={usingEnvVars}
             />
             <p className="text-sm text-muted-foreground">
               If you're using a REST API application, enter your authentication token here
@@ -116,7 +159,7 @@ const BitrixConfigForm = ({ onSaved }: BitrixConfigFormProps) => {
             </div>
           )}
           
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading || usingEnvVars}>
             {loading ? 'Testing Connection...' : 'Save and Test Connection'}
           </Button>
         </form>

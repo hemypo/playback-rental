@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -26,6 +25,7 @@ import { BookingCalendar } from '@/components/BookingCalendar';
 import PricingCalculator from '@/components/PricingCalculator';
 import BitrixService, { BookingPeriod } from '@/services/bitrixService';
 import { formatDateRange } from '@/utils/dateUtils';
+import { toast } from 'react-toastify';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,14 +33,21 @@ const ProductDetail = () => {
   const [booking, setBooking] = useState<{ startDate?: Date; endDate?: Date }>({});
   const [addingToCart, setAddingToCart] = useState(false);
 
-  // Fetch product details
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
     queryFn: () => BitrixService.getProductById(id || ''),
-    onError: () => navigate('/catalog'),
+    meta: {
+      onError: (err: Error) => {
+        console.error("Error fetching product:", err);
+        toast({
+          title: "Error",
+          description: "Failed to load product details. Please try again later.",
+          variant: "destructive",
+        });
+      }
+    }
   });
 
-  // Fetch product bookings
   const { data: bookings } = useQuery({
     queryKey: ['bookings', id],
     queryFn: () => BitrixService.getProductBookings(id || ''),
@@ -69,6 +76,18 @@ const ProductDetail = () => {
     return (
       <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
         <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-12 text-center">
+        <h2 className="heading-2 mb-4">Product Not Found</h2>
+        <p className="mb-6">The product you're looking for doesn't exist or has been removed.</p>
+        <Button asChild>
+          <Link to="/catalog">Back to Catalog</Link>
+        </Button>
       </div>
     );
   }
