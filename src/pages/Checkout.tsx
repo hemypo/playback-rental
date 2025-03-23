@@ -193,7 +193,7 @@ const Checkout = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">123ь</span>
+                <span className="text-muted-foreground">Professional DSLR Camera</span>
                 <span>${subtotal.toFixed(2)}</span>
               </div>
               
