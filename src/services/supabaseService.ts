@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Product, BookingPeriod, Category, BookingFormData } from "@/types/product";
 
@@ -11,14 +10,12 @@ export const getProducts = async (): Promise<Product[]> => {
   if (error) throw error;
   
   return data.map(product => ({
-    ...product,
     id: product.id,
-    uid: product.uid,
     title: product.title,
     description: product.description,
     price: Number(product.price),
     category: product.category,
-    imageUrl: product.imageUrl,
+    imageUrl: product.imageurl,
     available: product.available,
     quantity: product.quantity
   }));
@@ -34,14 +31,12 @@ export const getProductById = async (id: string): Promise<Product> => {
   if (error) throw error;
   
   return {
-    ...data,
     id: data.id,
-    uid: data.uid,
     title: data.title,
     description: data.description,
     price: Number(data.price),
     category: data.category,
-    imageUrl: data.imageUrl,
+    imageUrl: data.imageurl,
     available: data.available,
     quantity: data.quantity
   };
@@ -51,12 +46,11 @@ export const createProduct = async (product: Omit<Product, 'id'>): Promise<Produ
   const { data, error } = await supabase
     .from('products')
     .insert([{
-      uid: product.uid,
       title: product.title,
       description: product.description,
       price: product.price,
       category: product.category,
-      imageUrl: product.imageUrl,
+      imageurl: product.imageUrl,
       available: product.available,
       quantity: product.quantity
     }])
@@ -66,14 +60,12 @@ export const createProduct = async (product: Omit<Product, 'id'>): Promise<Produ
   if (error) throw error;
   
   return {
-    ...data,
     id: data.id,
-    uid: data.uid,
     title: data.title,
     description: data.description,
     price: Number(data.price),
     category: data.category,
-    imageUrl: data.imageUrl,
+    imageUrl: data.imageurl,
     available: data.available,
     quantity: data.quantity
   };
@@ -83,12 +75,11 @@ export const updateProduct = async (id: string, product: Partial<Product>): Prom
   const { data, error } = await supabase
     .from('products')
     .update({
-      uid: product.uid,
       title: product.title,
       description: product.description,
       price: product.price,
       category: product.category,
-      imageUrl: product.imageUrl,
+      imageurl: product.imageUrl,
       available: product.available,
       quantity: product.quantity
     })
@@ -99,14 +90,12 @@ export const updateProduct = async (id: string, product: Partial<Product>): Prom
   if (error) throw error;
   
   return {
-    ...data,
     id: data.id,
-    uid: data.uid,
     title: data.title,
     description: data.description,
     price: Number(data.price),
     category: data.category,
-    imageUrl: data.imageUrl,
+    imageUrl: data.imageurl,
     available: data.available,
     quantity: data.quantity
   };
@@ -299,17 +288,17 @@ export const exportProductsToCSV = async (): Promise<string> => {
   
   if (error) throw error;
   
-  const headers = ['UID', 'Category', 'Title', 'Description', 'Photo', 'Price', 'Quantity'];
+  const headers = ['ID', 'Category', 'Title', 'Description', 'Photo', 'Price', 'Quantity'];
   
   let csvContent = headers.join(',') + '\n';
   
   products.forEach((product) => {
     const row = [
-      product.uid,
+      product.id,
       product.category,
       `"${product.title.replace(/"/g, '""')}"`, // Escape quotes
       `"${product.description.replace(/"/g, '""')}"`,
-      product.imageUrl,
+      product.imageurl,
       product.price,
       product.quantity
     ];
@@ -323,12 +312,12 @@ export const importProductsFromCSV = async (csvContent: string): Promise<Product
   const lines = csvContent.split('\n');
   const headers = lines[0].split(',');
   
-  // Get existing products UIDs to avoid duplicates
+  // Get existing products IDs to avoid duplicates
   const { data: existingProducts } = await supabase
     .from('products')
-    .select('uid');
+    .select('id');
   
-  const existingUIDs = new Set(existingProducts?.map(p => p.uid) || []);
+  const existingIDs = new Set(existingProducts?.map(p => p.id) || []);
   const newProducts: any[] = [];
   
   // Parse CSV and prepare product objects
@@ -339,21 +328,20 @@ export const importProductsFromCSV = async (csvContent: string): Promise<Product
     
     if (values.length !== headers.length) continue;
     
-    const [uid, category, title, description, imageUrl, price, quantity] = values;
+    const [id, category, title, description, imageUrl, price, quantity] = values;
     
-    // Skip if product with this UID already exists
-    if (existingUIDs.has(uid)) continue;
+    // Skip if product with this ID already exists
+    if (existingIDs.has(id)) continue;
     
     // Add category if it doesn't exist
     await addCategory(category);
     
     newProducts.push({
-      uid,
       title,
       description,
       price: parseFloat(price),
       category,
-      imageUrl,
+      imageurl: imageUrl,
       available: true,
       quantity: parseInt(quantity, 10)
     });
@@ -370,12 +358,11 @@ export const importProductsFromCSV = async (csvContent: string): Promise<Product
     
     return data.map(product => ({
       id: product.id,
-      uid: product.uid,
       title: product.title,
       description: product.description,
       price: Number(product.price),
       category: product.category,
-      imageUrl: product.imageUrl,
+      imageUrl: product.imageurl,
       available: product.available,
       quantity: product.quantity
     }));

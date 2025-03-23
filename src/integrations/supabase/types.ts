@@ -91,7 +91,6 @@ export type Database = {
           price: number
           quantity: number
           title: string
-          uid: string
         }
         Insert: {
           available?: boolean
@@ -103,7 +102,6 @@ export type Database = {
           price: number
           quantity?: number
           title: string
-          uid: string
         }
         Update: {
           available?: boolean
@@ -115,7 +113,6 @@ export type Database = {
           price?: number
           quantity?: number
           title?: string
-          uid?: string
         }
         Relationships: []
       }

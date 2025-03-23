@@ -61,12 +61,11 @@ import {
   exportProductsToCSV,
   importProductsFromCSV,
   addCategory
-} from '@/services/apiService';
+} from '@/services/supabaseService';
 import { Product, Category } from '@/types/product';
 
 // Form schema for product
 const productSchema = z.object({
-  uid: z.string().min(1, { message: 'UID обязателен' }),
   title: z.string().min(1, { message: 'Название товара обязательно' }),
   description: z.string().min(1, { message: 'Описание обязательно' }),
   price: z.coerce.number().positive({ message: 'Цена должна быть положительным числом' }),
@@ -103,7 +102,6 @@ const AdminProducts = () => {
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      uid: '',
       title: '',
       description: '',
       price: 0,
@@ -192,7 +190,7 @@ const AdminProducts = () => {
   // Filter products based on search term
   const filteredProducts = products?.filter(product => 
     product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.uid.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -216,7 +214,6 @@ const AdminProducts = () => {
   const handleEdit = (product: Product) => {
     setEditProduct(product);
     form.reset({
-      uid: product.uid,
       title: product.title,
       description: product.description,
       price: product.price,
@@ -236,8 +233,8 @@ const AdminProducts = () => {
   };
 
   // Export products to CSV
-  const handleExport = () => {
-    const csvContent = exportProductsToCSV();
+  const handleExport = async () => {
+    const csvContent = await exportProductsToCSV();
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -312,86 +309,71 @@ const AdminProducts = () => {
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="uid"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>UID</FormLabel>
-                          <FormControl>
-                            <Input placeholder="1, 2, 3..." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Категория</FormLabel>
-                          {showCategoryInput ? (
-                            <div className="flex gap-2">
-                              <Input 
-                                placeholder="Новая категория..."
-                                value={newCategoryName}
-                                onChange={(e) => setNewCategoryName(e.target.value)}
-                                className="flex-1"
-                              />
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                onClick={handleAddCategory}
-                                size="sm"
-                              >
-                                Добавить
-                              </Button>
-                              <Button 
-                                type="button" 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => setShowCategoryInput(false)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="flex gap-2">
-                              <Select 
-                                onValueChange={field.onChange} 
-                                defaultValue={field.value}
-                                value={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Выберите категорию" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {categories?.map((category: Category) => (
-                                    <SelectItem key={category.id} value={category.name}>
-                                      {category.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                onClick={() => setShowCategoryInput(true)}
-                                size="sm"
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          )}
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Категория</FormLabel>
+                        {showCategoryInput ? (
+                          <div className="flex gap-2">
+                            <Input 
+                              placeholder="Новая категория..."
+                              value={newCategoryName}
+                              onChange={(e) => setNewCategoryName(e.target.value)}
+                              className="flex-1"
+                            />
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              onClick={handleAddCategory}
+                              size="sm"
+                            >
+                              Добавить
+                            </Button>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setShowCategoryInput(false)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2">
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Выберите категорию" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {categories?.map((category: Category) => (
+                                  <SelectItem key={category.id} value={category.name}>
+                                    {category.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              onClick={() => setShowCategoryInput(true)}
+                              size="sm"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
                   <FormField
                     control={form.control}
@@ -553,7 +535,7 @@ const AdminProducts = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Фото</TableHead>
-                <TableHead>UID</TableHead>
+                <TableHead>ID</TableHead>
                 <TableHead>Название</TableHead>
                 <TableHead>Категория</TableHead>
                 <TableHead className="text-right">Цена / сутки</TableHead>
@@ -577,7 +559,7 @@ const AdminProducts = () => {
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="font-mono text-xs">{product.uid}</TableCell>
+                  <TableCell className="font-mono text-xs">{product.id}</TableCell>
                   <TableCell className="font-medium">{product.title}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{product.category}</Badge>

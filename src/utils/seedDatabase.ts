@@ -4,82 +4,74 @@ import { supabase } from "@/integrations/supabase/client";
 // Sample data for initial DB population
 const sampleProducts = [
   {
-    uid: '1',
     title: 'Sony Alpha A7 III',
     description: 'Полнокадровая беззеркальная камера с разрешением 24.2 МП',
     price: 4500,
     category: 'Фотокамеры',
-    imageUrl: 'https://images.unsplash.com/photo-1516724562728-afc824a36e84',
+    imageurl: 'https://images.unsplash.com/photo-1516724562728-afc824a36e84',
     available: true,
     quantity: 3
   },
   {
-    uid: '2',
     title: 'Canon EF 70-200mm f/2.8L IS III USM',
     description: 'Телеобъектив с постоянной диафрагмой для профессиональных фотографов',
     price: 2800,
     category: 'Объективы',
-    imageUrl: 'https://images.unsplash.com/photo-1499085650423-45149d8166a6',
+    imageurl: 'https://images.unsplash.com/photo-1499085650423-45149d8166a6',
     available: true,
     quantity: 2
   },
   {
-    uid: '3',
     title: 'Godox SL-60W LED',
     description: 'Постоянный LED свет мощностью 60Вт с управлением через пульт',
     price: 1200,
     category: 'Освещение',
-    imageUrl: 'https://images.unsplash.com/photo-1534003276576-0cbfc449fb6f',
+    imageurl: 'https://images.unsplash.com/photo-1534003276576-0cbfc449fb6f',
     available: true,
     quantity: 5
   },
   {
-    uid: '4',
     title: 'Rode VideoMic Pro+',
     description: 'Направленный микрофон для камер и DSLR с улучшенным качеством звука',
     price: 950,
     category: 'Аудио',
-    imageUrl: 'https://images.unsplash.com/photo-1520170350707-b2da59970118',
+    imageurl: 'https://images.unsplash.com/photo-1520170350707-b2da59970118',
     available: false,
     quantity: 4
   },
   {
-    uid: '5',
     title: 'DJI Ronin-S',
     description: 'Трехосевой стабилизатор для DSLR и беззеркальных камер',
     price: 2100,
     category: 'Стабилизаторы',
-    imageUrl: 'https://images.unsplash.com/photo-1542192143-6cb2c972e497',
+    imageurl: 'https://images.unsplash.com/photo-1542192143-6cb2c972e497',
     available: true,
     quantity: 2
   },
   {
-    uid: '6',
     title: 'Blackmagic Pocket Cinema Camera 6K',
     description: 'Кинокамера с разрешением 6K и записью в Blackmagic RAW',
     price: 5200,
     category: 'Видеокамеры',
-    imageUrl: 'https://images.unsplash.com/photo-1585939268110-1fa0f2a708b5',
+    imageurl: 'https://images.unsplash.com/photo-1585939268110-1fa0f2a708b5',
     available: true,
     quantity: 1
   },
   {
-    uid: '7',
     title: 'DJI Mavic 3',
     description: 'Профессиональный дрон с камерой Hasselblad и увеличенным временем полета',
     price: 6500,
     category: 'Дроны',
-    imageUrl: 'https://images.unsplash.com/photo-1508444845599-5c89863b1c44',
+    imageurl: 'https://images.unsplash.com/photo-1508444845599-5c89863b1c44',
     available: true,
     quantity: 2
   },
   {
-    uid: '8',
     title: 'Zoom H6',
     description: 'Портативный аудиорекордер с 6 входами и сменными микрофонными капсюлями',
     price: 1800,
     category: 'Аудио',
-    imageUrl: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04',
+    imageurl: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04',
     available: true,
     quantity: 3
   }
@@ -144,22 +136,17 @@ export const seedDatabase = async () => {
     // Get product IDs
     const { data: products } = await supabase
       .from('products')
-      .select('id, uid');
+      .select('id, title');
     
     if (!products || products.length === 0) {
       console.error('No products found after seeding');
       return;
     }
     
-    // Map old product IDs to new UUIDs
-    const productIdMap = Object.fromEntries(
-      products.map(product => [product.uid, product.id])
-    );
-    
     // Create sample bookings
     const sampleBookings = [
       {
-        product_id: productIdMap['1'],
+        product_id: products.find(p => p.title === 'Sony Alpha A7 III')?.id,
         start_date: currentDate.toISOString(),
         end_date: nextWeek.toISOString(),
         customer_name: 'Иван Петров',
@@ -170,7 +157,7 @@ export const seedDatabase = async () => {
         notes: null
       },
       {
-        product_id: productIdMap['3'],
+        product_id: products.find(p => p.title === 'Godox SL-60W LED')?.id,
         start_date: nextWeek.toISOString(),
         end_date: twoWeeksLater.toISOString(),
         customer_name: 'Анна Сидорова',
@@ -181,7 +168,7 @@ export const seedDatabase = async () => {
         notes: 'Нужен дополнительный аккумулятор'
       },
       {
-        product_id: productIdMap['7'],
+        product_id: products.find(p => p.title === 'DJI Mavic 3')?.id,
         start_date: twoWeeksLater.toISOString(),
         end_date: threeWeeksLater.toISOString(),
         customer_name: 'Алексей Иванов',
