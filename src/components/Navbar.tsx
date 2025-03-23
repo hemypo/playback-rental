@@ -44,15 +44,14 @@ const Navbar = () => {
             className="text-xl font-semibold tracking-tight hover:opacity-80 transition-opacity flex items-center"
           >
             <img 
-              src="/logo.png" 
-              alt="RentalHub" 
+              src="/logo.svg" 
+              alt="PlayBack Rental" 
               className="h-8 mr-2" 
               onError={(e) => {
                 // Fallback to text if logo image fails to load
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <span>RentalHub</span>
           </Link>
           
           <nav className="hidden md:flex items-center space-x-8">
@@ -126,14 +125,13 @@ const Navbar = () => {
               <div className="flex flex-col gap-8 mt-8">
                 <Link to="/" className="text-xl font-semibold tracking-tight flex items-center">
                   <img 
-                    src="/logo.png" 
-                    alt="RentalHub" 
+                    src="/logo.svg" 
+                    alt="PlayBack Rental" 
                     className="h-8 mr-2" 
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
                   />
-                  <span>RentalHub</span>
                 </Link>
                 <nav className="flex flex-col space-y-6">
                   <Link to="/" className="text-foreground hover:text-primary transition-colors">Главная</Link>
