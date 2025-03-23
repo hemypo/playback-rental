@@ -81,36 +81,6 @@ const Index = () => {
               Ознакомьтесь с нашим широким ассортиментом профессионального оборудования. Мы предлагаем новейшие технологии для фотосъемки, производства видео, аудиозаписи и многого другого.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categoriesLoading ? (
-              Array(4).fill(0).map((_, i) => (
-                <div key={i} className="animate-pulse h-40 rounded-xl bg-muted"></div>
-              ))
-            ) : (
-              categories?.map((category, index) => (
-                <Link 
-                  to={`/catalog?category=${category.name}`} 
-                  key={category.id}
-                  className="relative group overflow-hidden rounded-xl subtle-ring"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent z-10"></div>
-                  <div 
-                    className="h-60 w-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                    style={{ 
-                      backgroundImage: `url('https://source.unsplash.com/random/?${category.name.toLowerCase()},equipment')` 
-                    }}
-                  ></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
-                    <div className="flex items-center gap-3">
-                      {getCategoryIcon(category.name)}
-                      <h3 className="text-xl font-medium text-white">{category.name}</h3>
-                    </div>
-                  </div>
-                </Link>
-              ))
-            )}
-          </div>
         </div>
       </section>
 
