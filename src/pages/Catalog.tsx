@@ -102,7 +102,7 @@ const Catalog = () => {
     <div className="min-h-screen">
       <div className="bg-gradient-to-r from-primary/90 to-primary py-20 px-4">
         <div className="container mx-auto">
-          <h1 className="heading-1 text-white mb-6">Equipment Catalog</h1>
+          <h1 className="heading-1 text-white mb-6">Каталог техники</h1>
           <div className="flex items-center gap-4">
             <div className="relative flex-1 max-w-md">
               <form onSubmit={handleSubmit}>
@@ -113,29 +113,29 @@ const Catalog = () => {
                   defaultValue={search}
                 />
                 <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-                <Button type="submit" className="sr-only">Search</Button>
+                <Button type="submit" className="sr-only">Поиск</Button>
               </form>
             </div>
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-12">
                   <FilterIcon className="mr-2 h-5 w-5" />
-                  Filters
+                  Фильтры
                 </Button>
               </SheetTrigger>
               <SheetContent className="w-full max-w-md glass-panel">
                 <SheetHeader>
-                  <SheetTitle>Filter Equipment</SheetTitle>
+                  <SheetTitle>Фильтр</SheetTitle>
                 </SheetHeader>
                 <div className="py-6 space-y-8">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Category</h3>
+                    <h3 className="text-lg font-medium">Категории</h3>
                     <Select value={category} onValueChange={handleCategoryChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Categories" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Categories</SelectItem>
+                        <SelectItem value="">Все категории</SelectItem>
                         {categories?.map((cat) => (
                           <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                         ))}
@@ -144,7 +144,7 @@ const Catalog = () => {
                   </div>
                   
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Date Range</h3>
+                    <h3 className="text-lg font-medium">Диапазон дат</h3>
                     <BookingCalendar 
                       onBookingChange={handleDateChange}
                     />
@@ -155,7 +155,7 @@ const Catalog = () => {
                     className="w-full" 
                     onClick={clearFilters}
                   >
-                    Clear All Filters
+                    Очистить
                   </Button>
                 </div>
               </SheetContent>
@@ -169,7 +169,7 @@ const Catalog = () => {
         {activeFilters.length > 0 && (
           <div className="mb-8">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="text-sm font-medium">Active filters:</span>
+              <span className="text-sm font-medium">Фильтры:</span>
               {activeFilters.map((filter, index) => (
                 <Badge key={index} variant="secondary" className="px-3 py-1">
                   {filter}
@@ -182,7 +182,7 @@ const Catalog = () => {
                 onClick={clearFilters}
               >
                 <XIcon className="h-3 w-3 mr-1" />
-                Clear all
+                Очистить
               </Button>
             </div>
           </div>
@@ -198,10 +198,10 @@ const Catalog = () => {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="relevance">Relevance</SelectItem>
-              <SelectItem value="price-asc">Price: Low to High</SelectItem>
-              <SelectItem value="price-desc">Price: High to Low</SelectItem>
-              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="relevance">Популярное</SelectItem>
+              <SelectItem value="price-asc">Цена: по возрастанию</SelectItem>
+              <SelectItem value="price-desc">Цена: по убыванию</SelectItem>
+              <SelectItem value="newest">Последние</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -217,11 +217,11 @@ const Catalog = () => {
           ) : products?.length === 0 ? (
             <div className="text-center py-16">
               <SlidersIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-2xl font-medium mb-2">No equipment found</h3>
+              <h3 className="text-2xl font-medium mb-2">Ничего не найдено</h3>
               <p className="text-muted-foreground mb-6">
-                Try adjusting your search or filters to find what you're looking for.
+                Попробуйте настроить свой поиск или фильтры, чтобы найти то, что вы ищете.  
               </p>
-              <Button onClick={clearFilters}>Clear all filters</Button>
+              <Button onClick={clearFilters}>Очистить</Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
