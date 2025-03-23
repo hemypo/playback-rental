@@ -62,13 +62,13 @@ const Checkout = () => {
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
           <ShieldCheckIcon className="h-10 w-10 text-green-600" />
         </div>
-        <h1 className="heading-2 mb-4 text-center">Booking Confirmed!</h1>
+        <h1 className="heading-2 mb-4 text-center">Бронирование подтверждено!</h1>
         <p className="text-xl text-center text-muted-foreground mb-8 max-w-md">
-          Your equipment rental has been confirmed. You'll receive a confirmation email shortly.
+         Ваш прокат оборудования подтвержден. Вскоре вы получите электронное письмо с подтверждением бронирования.
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
           <Button asChild size="lg">
-            <Link to="/catalog">Continue Shopping</Link>
+            <Link to="/catalog">Вернуться к каталогу</Link>
           </Button>
         </div>
       </div>
@@ -80,29 +80,29 @@ const Checkout = () => {
       <div className="flex items-center mb-8">
         <Link to="/catalog" className="flex items-center text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeftIcon className="mr-2 h-4 w-4" />
-          Back to Catalog
+          Вернуться к каталогу
         </Link>
       </div>
       
-      <h1 className="heading-2 mb-8">Checkout</h1>
+      <h1 className="heading-2 mb-8">Корзинаt</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>Your Cart</CardTitle>
-              <CardDescription>Review your rental items</CardDescription>
+              <CardTitle>Ваша корзина</CardTitle>
+              <CardDescription>Проверьте ваш заказ перед оформлением</CardDescription>
             </CardHeader>
             <CardContent>
               {MOCK_CART_ITEMS.length === 0 ? (
                 <div className="text-center py-10">
                   <PackageIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-xl font-medium mb-2">Your cart is empty</h3>
+                  <h3 className="text-xl font-medium mb-2">Ваша корзина пуста</h3>
                   <p className="text-muted-foreground mb-6">
-                    Looks like you haven't added any equipment to your cart yet.
+                  Похоже, вы еще не добавили какое-либо оборудование в свою корзину..
                   </p>
                   <Button asChild>
-                    <Link to="/catalog">Browse Catalog</Link>
+                    <Link to="/catalog">Просмотр каталога</Link>
                   </Button>
                 </div>
               ) : (
@@ -139,94 +139,46 @@ const Checkout = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle>Rental Details</CardTitle>
-              <CardDescription>Complete your booking information</CardDescription>
+              <CardTitle>Детали аренды</CardTitle>
+              <CardDescription>Заполните информацию о вашем бронировании</CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="details" className="w-full">
                 <TabsList className="grid grid-cols-2 mb-8">
                   <TabsTrigger value="details">
                     <UserIcon className="h-4 w-4 mr-2" />
-                    Personal Details
+                    Личные данные
                   </TabsTrigger>
                   <TabsTrigger value="payment">
                     <CreditCardIcon className="h-4 w-4 mr-2" />
-                    Payment
+                    Оплата
                   </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="details" className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">First Name</label>
+                      <label className="text-sm font-medium">Имя</label>
                       <Input />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Last Name</label>
+                      <label className="text-sm font-medium">Фамилия</label>
                       <Input />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Email Address</label>
+                    <label className="text-sm font-medium">E-mail</label>
                     <Input type="email" />
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Phone Number</label>
+                    <label className="text-sm font-medium">Телефон</label>
                     <Input type="tel" />
                   </div>
                   
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Address</label>
-                    <Input />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">City</label>
-                      <Input />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">State</label>
-                      <Input />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Zip Code</label>
-                      <Input />
-                    </div>
-                  </div>
-                  
                   <div className="pt-4">
-                    <Button className="w-full" size="lg">Continue to Payment</Button>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="payment" className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Card Number</label>
-                    <Input placeholder="1234 5678 9012 3456" />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Expiration Date</label>
-                      <Input placeholder="MM/YY" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">CVC</label>
-                      <Input placeholder="123" />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Cardholder Name</label>
-                    <Input placeholder="Name as it appears on card" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Billing Zip Code</label>
-                    <Input placeholder="Zip/Postal Code" />
+                    <Button className="w-full" size="lg">Оплата</Button>
                   </div>
                 </TabsContent>
               </Tabs>
@@ -237,23 +189,18 @@ const Checkout = () => {
         <div>
           <Card className="sticky top-20">
             <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
+              <CardTitle>Ваш заказ</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-muted-foreground">123ь</span>
                 <span>${subtotal.toFixed(2)}</span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Rental Insurance</span>
-                <span>${insuranceFee.toFixed(2)}</span>
               </div>
               
               <Separator />
               
               <div className="flex justify-between text-lg font-semibold">
-                <span>Total</span>
+                <span>Стоимость:</span>
                 <span>${total.toFixed(2)}</span>
               </div>
             </CardContent>
@@ -267,10 +214,10 @@ const Checkout = () => {
                 {loading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Processing...
+                    Отправка...
                   </>
                 ) : (
-                  'Complete Booking'
+                  'Бронирование подтверждено'
                 )}
               </Button>
             </CardFooter>

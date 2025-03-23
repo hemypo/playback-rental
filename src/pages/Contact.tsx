@@ -52,9 +52,9 @@ const Contact = () => {
       {/* Hero Section */}
       <section className="bg-primary text-white py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="heading-1 mb-6">Contact Us</h1>
+          <h1 className="heading-1 mb-6">Связаться с нами</h1>
           <p className="text-xl text-white/90 max-w-2xl mx-auto">
-            Have questions about our equipment rental service? Get in touch with our team.
+          У вас есть вопросы по поводу нашей услуги проката оборудования? Свяжитесь с нашей командой.
           </p>
         </div>
       </section>
@@ -65,7 +65,6 @@ const Contact = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
             {/* Contact Information */}
             <div className="space-y-8">
-              <h2 className="heading-3 mb-6">Get In Touch</h2>
               
               <div className="grid gap-6">
                 <div className="flex gap-4">
@@ -73,10 +72,10 @@ const Contact = () => {
                     <MapPinIcon className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-medium mb-1">Our Location</h3>
+                    <h3 className="font-medium mb-1">Наше местоположение</h3>
                     <p className="text-muted-foreground">
-                      123 Equipment Street<br />
-                      New York, NY 10001
+                    Г.Кемерово <br />
+                    ул. Демьяна Бедного, 6 
                     </p>
                   </div>
                 </div>
@@ -86,10 +85,10 @@ const Contact = () => {
                     <PhoneIcon className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-medium mb-1">Phone Number</h3>
+                    <h3 className="font-medium mb-1">Телефон</h3>
                     <p className="text-muted-foreground">
-                      <a href="tel:+12345678900" className="hover:text-primary transition-colors">
-                        +1 (234) 567-8900
+                      <a href="tel:+79999999999" className="hover:text-primary transition-colors">
+                        +7 (999) 999-99-99
                       </a>
                     </p>
                   </div>
@@ -100,10 +99,10 @@ const Contact = () => {
                     <MailIcon className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-medium mb-1">Email Address</h3>
+                    <h3 className="font-medium mb-1">E-mail</h3>
                     <p className="text-muted-foreground">
-                      <a href="mailto:info@rentalhub.com" className="hover:text-primary transition-colors">
-                        info@rentalhub.com
+                      <a href="mailto:PlaybackRental@yandex.ru" className="hover:text-primary transition-colors">
+                      PlaybackRental@yandex.ru
                       </a>
                     </p>
                   </div>
@@ -111,19 +110,15 @@ const Contact = () => {
               </div>
               
               <div className="pt-6">
-                <h3 className="font-medium mb-3">Business Hours</h3>
+                <h3 className="font-medium mb-3">График работы</h3>
                 <div className="space-y-2 text-muted-foreground">
                   <div className="flex justify-between">
-                    <span>Monday - Friday:</span>
-                    <span>9:00 AM - 6:00 PM</span>
+                    <span>Будние:</span>
+                    <span>9:00 - 18:00</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Saturday:</span>
-                    <span>10:00 AM - 4:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sunday:</span>
-                    <span>Closed</span>
+                    <span>Выходные:</span>
+                    <span>10:00 - 19:00</span>
                   </div>
                 </div>
               </div>
@@ -131,13 +126,13 @@ const Contact = () => {
             
             {/* Contact Form */}
             <div className="bg-white rounded-xl shadow-soft p-8 subtle-ring">
-              <h2 className="heading-3 mb-6">Send Us a Message</h2>
+              <h2 className="heading-3 mb-6">Отправьте нам сообщение</h2>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label htmlFor="name" className="text-sm font-medium">
-                      Your Name
+                      Имя
                     </label>
                     <Input
                       id="name"
@@ -149,42 +144,14 @@ const Contact = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium">
-                      Email Address
-                    </label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formState.email}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
                     <label htmlFor="phone" className="text-sm font-medium">
-                      Phone Number
+                      Телефон
                     </label>
                     <Input
                       id="phone"
                       name="phone"
-                      type="tel"
+                      type="phone"
                       value={formState.phone}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label htmlFor="subject" className="text-sm font-medium">
-                      Subject
-                    </label>
-                    <Input
-                      id="subject"
-                      name="subject"
-                      value={formState.subject}
                       onChange={handleChange}
                       required
                     />
@@ -193,7 +160,7 @@ const Contact = () => {
                 
                 <div className="space-y-2">
                   <label htmlFor="message" className="text-sm font-medium">
-                    Your Message
+                    Сообщение
                   </label>
                   <Textarea
                     id="message"
@@ -209,12 +176,12 @@ const Contact = () => {
                   {isSubmitting ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Sending...
+                     Отправка...
                     </>
                   ) : (
                     <>
                       <SendIcon className="h-4 w-4 mr-2" />
-                      Send Message
+                      Отправить
                     </>
                   )}
                 </Button>
@@ -228,9 +195,9 @@ const Contact = () => {
       <section className="py-20 bg-secondary/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="heading-2 mb-4">Visit Our Location</h2>
+            <h2 className="heading-2 mb-4">Посетите наш офис</h2>
             <p className="body-text max-w-2xl mx-auto">
-              We're conveniently located in the heart of the city. Come visit our showroom to see our equipment in person.
+            Мы удобно расположены в самом центре города. Приходите в наш выставочный зал, чтобы лично ознакомиться с нашим оборудованием.
             </p>
           </div>
           
@@ -240,10 +207,10 @@ const Contact = () => {
               <div className="w-full h-full flex items-center justify-center bg-muted">
                 <div className="text-center p-8">
                   <MapPinIcon className="h-12 w-12 text-primary mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Interactive Map Coming Soon</h3>
+                  <h3 className="text-lg font-medium mb-2">Карта в процессе</h3>
                   <p className="text-muted-foreground max-w-md">
-                    We're working on integrating an interactive map. In the meantime, 
-                    you can find us at 123 Equipment Street, New York, NY 10001.
+                  Мы работаем над созданием интерактивной карты. А пока
+                  вы можете найти нас по адресу Г.Кемерово ул. Демьяна Бедного, 6 
                   </p>
                 </div>
               </div>
