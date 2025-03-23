@@ -9,7 +9,116 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          created_at: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          end_date: string
+          id: string
+          notes: string | null
+          product_id: string | null
+          start_date: string
+          status: string
+          total_price: number
+        }
+        Insert: {
+          created_at?: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          end_date: string
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          start_date: string
+          status: string
+          total_price: number
+        }
+        Update: {
+          created_at?: string | null
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          end_date?: string
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          start_date?: string
+          status?: string
+          total_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      categories: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          available: boolean
+          category: string
+          created_at: string | null
+          description: string
+          id: string
+          imageurl: string
+          price: number
+          quantity: number
+          title: string
+          uid: string
+        }
+        Insert: {
+          available?: boolean
+          category: string
+          created_at?: string | null
+          description: string
+          id?: string
+          imageurl: string
+          price: number
+          quantity?: number
+          title: string
+          uid: string
+        }
+        Update: {
+          available?: boolean
+          category?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          imageurl?: string
+          price?: number
+          quantity?: number
+          title?: string
+          uid?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
