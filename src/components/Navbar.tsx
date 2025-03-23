@@ -52,6 +52,7 @@ const Navbar = () => {
                 e.currentTarget.style.display = 'none';
               }}
             />
+            <span>Playback Rental</span>
           </Link>
           
           <nav className="hidden md:flex items-center space-x-8">
@@ -132,6 +133,7 @@ const Navbar = () => {
                       e.currentTarget.style.display = 'none';
                     }}
                   />
+                  <span>Playback Rental</span>
                 </Link>
                 <nav className="flex flex-col space-y-6">
                   <Link to="/" className="text-foreground hover:text-primary transition-colors">Главная</Link>
