@@ -1,17 +1,19 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { SearchIcon, MenuIcon, ShoppingCartIcon, XIcon } from 'lucide-react';
+import { SearchIcon, MenuIcon, ShoppingCartIcon, XIcon, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import AnimatedTransition from './AnimatedTransition';
 import { cn } from '@/lib/utils';
+import { checkAuth } from '@/services/apiService';
 
 const Navbar = () => {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const isAuthenticated = checkAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -39,16 +41,25 @@ const Navbar = () => {
         <div className="flex items-center gap-8">
           <Link 
             to="/" 
-            className="text-xl font-semibold tracking-tight hover:opacity-80 transition-opacity"
+            className="text-xl font-semibold tracking-tight hover:opacity-80 transition-opacity flex items-center"
           >
-            RentalHub
+            <img 
+              src="/logo.png" 
+              alt="RentalHub" 
+              className="h-8 mr-2" 
+              onError={(e) => {
+                // Fallback to text if logo image fails to load
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            <span>RentalHub</span>
           </Link>
           
           <nav className="hidden md:flex items-center space-x-8">
-            <NavLink to="/" active={isActive('/')}>Home</NavLink>
-            <NavLink to="/catalog" active={isActive('/catalog')}>Catalog</NavLink>
-            <NavLink to="/how-it-works" active={isActive('/how-it-works')}>How It Works</NavLink>
-            <NavLink to="/contact" active={isActive('/contact')}>Contact</NavLink>
+            <NavLink to="/" active={isActive('/')}>Главная</NavLink>
+            <NavLink to="/catalog" active={isActive('/catalog')}>Каталог</NavLink>
+            <NavLink to="/how-it-works" active={isActive('/how-it-works')}>Как это работает</NavLink>
+            <NavLink to="/contact" active={isActive('/contact')}>Контакты</NavLink>
           </nav>
         </div>
 
@@ -59,7 +70,7 @@ const Navbar = () => {
             className="hidden md:flex items-center relative"
           >
             <Input 
-              placeholder="Search equipment..." 
+              placeholder="Поиск оборудования..." 
               className="w-60 bg-white/80 dark:bg-black/60 rounded-full pr-10"
               autoFocus={isSearchOpen}
             />
@@ -91,6 +102,16 @@ const Navbar = () => {
             </Button>
           </Link>
 
+          <Link to={isAuthenticated ? "/admin" : "/login"}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20"
+            >
+              <LogIn className="h-5 w-5" />
+            </Button>
+          </Link>
+
           <Sheet>
             <SheetTrigger asChild>
               <Button 
@@ -103,13 +124,25 @@ const Navbar = () => {
             </SheetTrigger>
             <SheetContent side="right" className="glass-panel w-full max-w-xs">
               <div className="flex flex-col gap-8 mt-8">
-                <Link to="/" className="text-xl font-semibold tracking-tight">RentalHub</Link>
+                <Link to="/" className="text-xl font-semibold tracking-tight flex items-center">
+                  <img 
+                    src="/logo.png" 
+                    alt="RentalHub" 
+                    className="h-8 mr-2" 
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  <span>RentalHub</span>
+                </Link>
                 <nav className="flex flex-col space-y-6">
-                  <Link to="/" className="text-foreground hover:text-primary transition-colors">Home</Link>
-                  <Link to="/catalog" className="text-foreground hover:text-primary transition-colors">Catalog</Link>
-                  <Link to="/how-it-works" className="text-foreground hover:text-primary transition-colors">How It Works</Link>
-                  <Link to="/contact" className="text-foreground hover:text-primary transition-colors">Contact</Link>
-                  <Link to="/admin" className="text-foreground hover:text-primary transition-colors">Admin</Link>
+                  <Link to="/" className="text-foreground hover:text-primary transition-colors">Главная</Link>
+                  <Link to="/catalog" className="text-foreground hover:text-primary transition-colors">Каталог</Link>
+                  <Link to="/how-it-works" className="text-foreground hover:text-primary transition-colors">Как это работает</Link>
+                  <Link to="/contact" className="text-foreground hover:text-primary transition-colors">Контакты</Link>
+                  <Link to={isAuthenticated ? "/admin" : "/login"} className="text-foreground hover:text-primary transition-colors">
+                    {isAuthenticated ? "Админ-панель" : "Вход"}
+                  </Link>
                 </nav>
               </div>
             </SheetContent>

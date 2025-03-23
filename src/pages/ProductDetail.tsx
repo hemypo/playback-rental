@@ -24,8 +24,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AnimatedTransition from '@/components/AnimatedTransition';
 import { BookingCalendar } from '@/components/BookingCalendar';
 import PricingCalculator from '@/components/PricingCalculator';
-import BitrixService, { BookingPeriod } from '@/services/bitrixService';
+import { getProductById, getProductBookings } from '@/services/apiService';
 import { formatDateRange } from '@/utils/dateUtils';
+import { BookingPeriod, Product } from '@/types/product';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,14 +37,16 @@ const ProductDetail = () => {
   // Fetch product details
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
-    queryFn: () => BitrixService.getProductById(id || ''),
-    onError: () => navigate('/catalog'),
+    queryFn: () => getProductById(id || ''),
+    meta: {
+      onError: () => navigate('/catalog')
+    }
   });
 
   // Fetch product bookings
   const { data: bookings } = useQuery({
     queryKey: ['bookings', id],
-    queryFn: () => BitrixService.getProductBookings(id || ''),
+    queryFn: () => getProductBookings(id || ''),
     enabled: !!id,
   });
 
@@ -76,10 +79,10 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <h2 className="heading-2 mb-4">Product Not Found</h2>
-        <p className="mb-6">The product you're looking for doesn't exist or has been removed.</p>
+        <h2 className="heading-2 mb-4">Товар не найден</h2>
+        <p className="mb-6">Товар, который вы ищете, не существует или был удален.</p>
         <Button asChild>
-          <Link to="/catalog">Back to Catalog</Link>
+          <Link to="/catalog">Вернуться в каталог</Link>
         </Button>
       </div>
     );

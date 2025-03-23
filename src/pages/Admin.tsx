@@ -1,94 +1,167 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  Package, 
+  Calendar, 
+  ClipboardList, 
+  Users, 
+  Settings, 
+  LogOut
+} from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import BitrixIntegration from '@/components/BitrixIntegration';
+import { Button } from '@/components/ui/button';
+import { logout, getCurrentUser } from '@/services/apiService';
+
+import AdminDashboard from './AdminDashboard';
+import AdminProducts from './admin/AdminProducts';
+import AdminBookings from './admin/AdminBookings';
+import AdminCalendar from './admin/AdminCalendar';
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const navigate = useNavigate();
+  const user = getCurrentUser();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="heading-2 mb-6">Панель администратора</h1>
-      
-      <Tabs defaultValue="dashboard" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 mb-8">
-          <TabsTrigger value="dashboard">Дашборд</TabsTrigger>
-          <TabsTrigger value="products">Товары</TabsTrigger>
-          <TabsTrigger value="integrations">Интеграции</TabsTrigger>
-        </TabsList>
+    <div className="min-h-screen flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-card border-r border-border hidden md:block">
+        <div className="p-6">
+          <h2 className="text-xl font-semibold mb-1">Админ-панель</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            Управление сайтом проката
+          </p>
+          
+          <nav className="space-y-1">
+            <NavLink 
+              to="/admin" 
+              icon={<LayoutDashboard className="h-5 w-5" />}
+              active={activeTab === 'dashboard'}
+              onClick={() => setActiveTab('dashboard')}
+            >
+              Дашборд
+            </NavLink>
+            <NavLink 
+              to="/admin" 
+              icon={<Package className="h-5 w-5" />}
+              active={activeTab === 'products'}
+              onClick={() => setActiveTab('products')}
+            >
+              Товары
+            </NavLink>
+            <NavLink 
+              to="/admin" 
+              icon={<ClipboardList className="h-5 w-5" />}
+              active={activeTab === 'bookings'}
+              onClick={() => setActiveTab('bookings')}
+            >
+              Заявки
+            </NavLink>
+            <NavLink 
+              to="/admin" 
+              icon={<Calendar className="h-5 w-5" />}
+              active={activeTab === 'calendar'}
+              onClick={() => setActiveTab('calendar')}
+            >
+              Календарь
+            </NavLink>
+          </nav>
+        </div>
         
-        <TabsContent value="dashboard">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>Всего товаров</CardTitle>
-                <CardDescription>Количество доступных товаров</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-bold">8</div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Активные аренды</CardTitle>
-                <CardDescription>Количество текущих аренд</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-bold">4</div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Доход за месяц</CardTitle>
-                <CardDescription>Общий доход за текущий месяц</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-bold">$1,250</div>
-              </CardContent>
-            </Card>
+        <div className="absolute bottom-0 w-64 p-6 border-t border-border">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-medium">{user?.username || 'Администратор'}</p>
+              <p className="text-xs text-muted-foreground">Админ</p>
+            </div>
           </div>
           
-          <div className="mt-8">
-            <BitrixIntegration />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="products">
-          <Card>
-            <CardHeader>
-              <CardTitle>Управление товарами</CardTitle>
-              <CardDescription>Добавление, редактирование и удаление товаров для аренды</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Здесь будет управление товарами.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="integrations">
-          <Card>
-            <CardHeader>
-              <CardTitle>Интеграция с Битрикс24</CardTitle>
-              <CardDescription>Настройка и управление интеграцией с Битрикс24</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Настройки API</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Настройте параметры API для подключения к вашему Битрикс24.
-                  </p>
-                  <BitrixIntegration showControls={true} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <Button 
+            variant="outline" 
+            className="w-full justify-start" 
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Выйти
+          </Button>
+        </div>
+      </div>
+      
+      {/* Main content */}
+      <div className="flex-1 bg-background">
+        <div className="p-6">
+          <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab}>
+            <div className="md:hidden mb-6">
+              <TabsList className="grid grid-cols-4 w-full">
+                <TabsTrigger value="dashboard">
+                  <LayoutDashboard className="h-5 w-5" />
+                </TabsTrigger>
+                <TabsTrigger value="products">
+                  <Package className="h-5 w-5" />
+                </TabsTrigger>
+                <TabsTrigger value="bookings">
+                  <ClipboardList className="h-5 w-5" />
+                </TabsTrigger>
+                <TabsTrigger value="calendar">
+                  <Calendar className="h-5 w-5" />
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            
+            <TabsContent value="dashboard">
+              <AdminDashboard />
+            </TabsContent>
+            
+            <TabsContent value="products">
+              <AdminProducts />
+            </TabsContent>
+            
+            <TabsContent value="bookings">
+              <AdminBookings />
+            </TabsContent>
+            
+            <TabsContent value="calendar">
+              <AdminCalendar />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
+  );
+};
+
+// Navigation link component
+interface NavLinkProps {
+  to: string;
+  icon: React.ReactNode;
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}
+
+const NavLink = ({ to, icon, active, onClick, children }: NavLinkProps) => {
+  return (
+    <button
+      className={`flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition-colors ${
+        active 
+          ? 'bg-primary text-primary-foreground' 
+          : 'text-foreground hover:bg-secondary'
+      }`}
+      onClick={onClick}
+    >
+      {icon}
+      <span>{children}</span>
+    </button>
   );
 };
 

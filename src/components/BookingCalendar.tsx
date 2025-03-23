@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format, addDays, isSameDay, isAfter, isBefore, addHours } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -64,11 +63,13 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
         setEndDate(addHours(newStartDate, MIN_RENTAL_HOURS));
       }
       
+      // Change to end date selection but keep calendar open
       setCalendarView('end');
     } else {
       if (startDate && !isBefore(date, startDate)) {
         setEndDate(setHoursToDate(date, parseInt(endTime)));
-        setCalendarOpen(false);
+        // Close calendar after selecting end date
+        setTimeout(() => setCalendarOpen(false), 100);
       }
     }
   };
@@ -105,39 +106,6 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
     }
   };
 
-  const handleCalendarToggle = (open: boolean) => {
-    setCalendarOpen(open);
-    if (open && !startDate) {
-      setCalendarView('start');
-    }
-  };
-
-  const isDateUnavailable = (date: Date) => {
-    // Disable dates in the past
-    if (isBefore(date, today) && !isSameDay(date, today)) {
-      return true;
-    }
-    
-    // Check if date falls within any availability period
-    if (availabilityPeriods.length > 0) {
-      const isAvailable = availabilityPeriods.some(period => 
-        (isSameDay(date, period.startDate) || isAfter(date, period.startDate)) &&
-        (isSameDay(date, period.endDate) || isBefore(date, period.endDate))
-      );
-      if (!isAvailable) return true;
-    }
-    
-    // Check if date is fully booked
-    if (bookedPeriods.length > 0) {
-      const isFullyBooked = bookedPeriods.some(period => 
-        isSameDay(date, period.startDate) && isSameDay(date, period.endDate)
-      );
-      if (isFullyBooked) return true;
-    }
-    
-    return false;
-  };
-
   // Update parent component when booking changes
   React.useEffect(() => {
     if (startDate && endDate && onBookingChange) {
@@ -149,9 +117,14 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
     <div className={cn("space-y-4", className)}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Pickup Date & Time</label>
+          <label className="text-sm font-medium">Дата и время начала</label>
           <div className="flex gap-2">
-            <Popover open={calendarOpen} onOpenChange={handleCalendarToggle}>
+            <Popover open={calendarOpen && calendarView === 'start'} onOpenChange={(open) => {
+              if (open) {
+                setCalendarView('start');
+              }
+              setCalendarOpen(open);
+            }}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -161,30 +134,19 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "PPP") : "Select date"}
+                  {startDate ? format(startDate, "dd.MM.yyyy") : "Выберите дату"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 glass-panel" align="start">
                 <div className="p-3 space-y-3">
                   <div className="flex justify-between items-center">
-                    <h4 className="font-medium">
-                      {calendarView === 'start' ? "Select pickup date" : "Select return date"}
-                    </h4>
-                    {startDate && calendarView === 'end' && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setCalendarView('start')}
-                      >
-                        Back
-                      </Button>
-                    )}
+                    <h4 className="font-medium">Выберите дату начала</h4>
                   </div>
                   <Calendar
                     mode="single"
-                    selected={calendarView === 'start' ? startDate : endDate}
+                    selected={startDate}
                     onSelect={handleSelectDate}
-                    disabled={isDateUnavailable}
+                    disabled={(date) => isBefore(date, today) && !isSameDay(date, today)}
                     initialFocus
                     className="pointer-events-auto"
                   />
@@ -194,7 +156,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
             
             <Select value={startTime} onValueChange={handleStartTimeChange}>
               <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Time" />
+                <SelectValue placeholder="Время" />
               </SelectTrigger>
               <SelectContent>
                 {HOURS.map((hour) => (
@@ -208,23 +170,50 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
         </div>
         
         <div className="space-y-2">
-          <label className="text-sm font-medium">Return Date & Time</label>
+          <label className="text-sm font-medium">Дата и время окончания</label>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !endDate && "text-muted-foreground"
-              )}
-              onClick={() => {
+            <Popover open={calendarOpen && calendarView === 'end'} onOpenChange={(open) => {
+              if (open) {
                 setCalendarView('end');
-                setCalendarOpen(true);
-              }}
-              disabled={!startDate}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {endDate ? format(endDate, "PPP") : "Select date"}
-            </Button>
+              }
+              setCalendarOpen(open);
+            }}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !endDate && "text-muted-foreground"
+                  )}
+                  disabled={!startDate}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, "dd.MM.yyyy") : "Выберите дату"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 glass-panel" align="start">
+                <div className="p-3 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium">Выберите дату окончания</h4>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setCalendarView('start')}
+                    >
+                      Назад
+                    </Button>
+                  </div>
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={handleSelectDate}
+                    disabled={(date) => startDate ? isBefore(date, startDate) : false}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
             
             <Select 
               value={endTime} 
@@ -232,7 +221,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
               disabled={!startDate}
             >
               <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Time" />
+                <SelectValue placeholder="Время" />
               </SelectTrigger>
               <SelectContent>
                 {HOURS.map((hour) => (
@@ -251,7 +240,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
           <div className="flex items-center gap-2 text-sm">
             <ClockIcon className="h-4 w-4 text-muted-foreground" />
             <span>
-              Booking period: <span className="font-medium">{format(startDate, "MMM d, HH:mm")} - {format(endDate, "MMM d, HH:mm")}</span>
+              Период аренды: <span className="font-medium">{format(startDate, "dd.MM, HH:mm")} - {format(endDate, "dd.MM, HH:mm")}</span>
             </span>
           </div>
         </div>

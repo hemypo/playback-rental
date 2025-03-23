@@ -64,24 +64,24 @@ export const PricingCalculator: React.FC<PricingCalculatorProps> = ({
     <AnimatedTransition show={true} type="slide-up">
       <Card className={className}>
         <div className="p-4 space-y-4">
-          <h3 className="font-medium text-lg">Price Summary</h3>
+          <h3 className="font-medium text-lg">Стоимость аренды</h3>
           
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Base price:</span>
-              <span>${basePrice.toFixed(2)}/day</span>
+              <span className="text-muted-foreground">Базовая цена:</span>
+              <span>{basePrice.toLocaleString()} ₽/сутки</span>
             </div>
             
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Rental period:</span>
+              <span className="text-muted-foreground">Период аренды:</span>
               <span>
-                {pricing.hours} hours ({pricing.days} {pricing.days === 1 ? 'day' : 'days'})
+                {pricing.hours} ч. ({pricing.days} {pricing.days === 1 ? 'день' : 'дней'})
               </span>
             </div>
             
             {pricing.dayDiscount > 0 && (
               <div className="flex justify-between text-green-600 dark:text-green-400">
-                <span>Volume discount:</span>
+                <span>Скидка за объем:</span>
                 <span>-{pricing.dayDiscount}%</span>
               </div>
             )}
@@ -91,20 +91,20 @@ export const PricingCalculator: React.FC<PricingCalculatorProps> = ({
           
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal:</span>
-              <span>${pricing.subtotal.toFixed(2)}</span>
+              <span className="text-muted-foreground">Подытог:</span>
+              <span>{pricing.subtotal.toLocaleString()} ₽</span>
             </div>
             
             {pricing.discount > 0 && (
               <div className="flex justify-between text-green-600 dark:text-green-400">
-                <span>Discount:</span>
-                <span>-${pricing.discount.toFixed(2)}</span>
+                <span>Скидка:</span>
+                <span>-{pricing.discount.toLocaleString()} ₽</span>
               </div>
             )}
             
             <div className="flex justify-between font-medium text-lg pt-2">
-              <span>Total:</span>
-              <span>${pricing.total.toFixed(2)}</span>
+              <span>Итого:</span>
+              <span>{pricing.total.toLocaleString()} ₽</span>
             </div>
           </div>
         </div>

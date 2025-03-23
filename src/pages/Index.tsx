@@ -7,20 +7,20 @@ import { Button } from '@/components/ui/button';
 import AnimatedTransition from '@/components/AnimatedTransition';
 import ProductCard from '@/components/ProductCard';
 import { BookingCalendar } from '@/components/BookingCalendar';
-import BitrixService from '@/services/bitrixService';
+import { getProducts, getCategories } from '@/services/apiService';
 
 const Index = () => {
   const [bookingPeriod, setBookingPeriod] = useState<{ startDate?: Date; endDate?: Date }>({});
 
   const { data: featuredProducts, isLoading: productsLoading } = useQuery({
     queryKey: ['featuredProducts'],
-    queryFn: () => BitrixService.getProducts(),
+    queryFn: () => getProducts(),
     select: (data) => data.slice(0, 4),
   });
 
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => BitrixService.getCategories(),
+    queryFn: () => getCategories(),
   });
 
   const handleBookingChange = (booking: { startDate: Date; endDate: Date }) => {
@@ -29,7 +29,7 @@ const Index = () => {
 
   const handleSearchClick = () => {
     if (bookingPeriod.startDate && bookingPeriod.endDate) {
-      // In a real app, we'd pass these dates as URL parameters
+      // В реальном приложении мы передадим эти даты как параметры URL
       window.location.href = '/catalog';
     }
   };
@@ -47,10 +47,10 @@ const Index = () => {
         ></div>
         
         <div className="container relative z-10 px-4 py-16 mx-auto">
-          <AnimatedTransition show={true} type="slide-up" className="max-w-xl">
+          <div className="max-w-xl">
             <h1 className="heading-1 text-white mb-6">Playback Rental</h1>
             <p className="text-xl text-white/90 mb-8">
-            Современная и профессиональная фото- и видеотехника, включая новейшие модели и классические решения, доступные для аренды на гибких и выгодных условиях.
+              Современная и профессиональная фото- и видеотехника, включая новейшие модели и классические решения, доступные для аренды на гибких и выгодных условиях.
             </p>
             
             <div className="w-full glass-panel p-6 rounded-xl">
@@ -67,7 +67,7 @@ const Index = () => {
                 <ArrowRightIcon className="ml-2 h-4 w-4" />
               </Button>
             </div>
-          </AnimatedTransition>
+          </div>
         </div>
       </section>
 
@@ -78,7 +78,8 @@ const Index = () => {
             <span className="chip mb-3">Категории</span>
             <h2 className="heading-2 mb-4">Оборудование для любых нужд</h2>
             <p className="body-text max-w-2xl">
-            Ознакомьтесь с нашим широким ассортиментом профессионального оборудования. Мы предлагаем новейшие технологии для фотосъемки, производства видео, аудиозаписи и многого другого.            </p>
+              Ознакомьтесь с нашим широким ассортиментом профессионального оборудования. Мы предлагаем новейшие технологии для фотосъемки, производства видео, аудиозаписи и многого другого.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -123,7 +124,7 @@ const Index = () => {
             </div>
             <Link to="/catalog">
               <Button variant="outline" className="group">
-              Посмотреть все
+                Посмотреть все
                 <ArrowRightIcon className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
@@ -150,25 +151,25 @@ const Index = () => {
             <span className="chip mb-3">Простой процесс</span>
             <h2 className="heading-2 mb-4">Как работает аренда</h2>
             <p className="body-text max-w-2xl">
-            Аренда оборудования у нас - это простой и беспроблемный процесс. Выполните следующие действия, чтобы приобрести оборудование, необходимое для вашего следующего проекта.
+              Аренда оборудования у нас - это простой и беспроблемный процесс. Выполните следующие действия, чтобы приобрести оборудование, необходимое для вашего следующего проекта.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                title: "Choose Equipment",
-                description: "Browse our extensive catalog and select the equipment you need for your project.",
+                title: "Выберите оборудование",
+                description: "Просмотрите наш обширный каталог и выберите оборудование, необходимое для вашего проекта.",
                 icon: <PackageIcon className="h-8 w-8 text-primary" />,
               },
               {
-                title: "Book Your Dates",
-                description: "Select your preferred pickup and return dates from our availability calendar.",
+                title: "Забронируйте даты",
+                description: "Выберите предпочтительные даты получения и возврата в нашем календаре доступности.",
                 icon: <CalendarIcon className="h-8 w-8 text-primary" />,
               },
               {
-                title: "Pickup and Create",
-                description: "Collect your equipment from our location and start creating your project.",
+                title: "Получите и создавайте",
+                description: "Заберите оборудование в нашем пункте выдачи и приступайте к реализации своего проекта.",
                 icon: <CameraIcon className="h-8 w-8 text-primary" />,
               },
             ].map((step, index) => (
@@ -190,7 +191,7 @@ const Index = () => {
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="heading-2 mb-6">Готовы арендовать высококачественное оборудование?</h2>
             <p className="text-xl text-white/90 mb-8">
-            Начните просматривать наш каталог прямо сейчас, чтобы найти идеальное оборудование для вашего проекта.
+              Начните просматривать наш каталог прямо сейчас, чтобы найти идеальное оборудование для вашего проекта.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" variant="default" asChild className="bg-white text-primary hover:bg-white/90">
@@ -221,7 +222,7 @@ const getCategoryIcon = (categoryName: string) => {
   }
 };
 
-// Missing import for CalendarIcon
+// Calendar icon component
 const CalendarIcon = () => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
