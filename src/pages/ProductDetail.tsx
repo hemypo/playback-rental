@@ -31,7 +31,7 @@ import { BookingPeriod, Product } from '@/types/product';
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [booking, setBooking] = useState<{ startDate?: Date; endDate?: Date }>({});
+  const [booking, setBooking] = useState<BookingPeriod | null>(null);
   const [addingToCart, setAddingToCart] = useState(false);
 
   // Fetch product details
@@ -50,12 +50,12 @@ const ProductDetail = () => {
     enabled: !!id,
   });
 
-  const handleBookingChange = (bookingPeriod: { startDate: Date; endDate: Date }) => {
+  const handleBookingChange = (bookingPeriod: BookingPeriod) => {
     setBooking(bookingPeriod);
   };
 
   const handleAddToCart = () => {
-    if (!booking.startDate || !booking.endDate || !product) return;
+    if (!booking || !product) return;
     
     setAddingToCart(true);
     
@@ -138,8 +138,8 @@ const ProductDetail = () => {
               </Badge>
               <h1 className="text-3xl md:text-4xl font-semibold mb-2">{product.title}</h1>
               <p className="text-xl mb-4">
-                <span className="font-semibold">${product.price}</span>
-                <span className="text-muted-foreground">/в сутки</span>
+                <span className="font-semibold">{product.price}</span>
+                <span className="text-muted-foreground"> ₽/в сутки</span>
               </p>
               <p className="text-muted-foreground">{product.description}</p>
             </div>
@@ -151,10 +151,10 @@ const ProductDetail = () => {
               
               <BookingCalendar
                 onBookingChange={handleBookingChange}
-                bookedPeriods={bookings?.map(b => ({ startDate: b.startDate, endDate: b.endDate }))}
+                bookedPeriods={bookings}
               />
 
-              {booking.startDate && booking.endDate && (
+              {booking?.startDate && booking?.endDate && (
                 <PricingCalculator
                   basePrice={product.price}
                   startDate={booking.startDate}
@@ -165,7 +165,7 @@ const ProductDetail = () => {
               <Button 
                 size="lg"
                 className="w-full"
-                disabled={!product.available || !booking.startDate || !booking.endDate || addingToCart}
+                disabled={!product.available || !booking?.startDate || !booking?.endDate || addingToCart}
                 onClick={handleAddToCart}
               >
                 {addingToCart ? (
@@ -176,7 +176,7 @@ const ProductDetail = () => {
                 ) : (
                   <>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {booking.startDate && booking.endDate ? 'Book Now' : 'Select Dates'}
+                    {booking?.startDate && booking?.endDate ? 'Забронировать' : 'Выберите даты'}
                   </>
                 )}
               </Button>
@@ -231,19 +231,19 @@ const ProductDetail = () => {
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
                       <span className="text-muted-foreground">4 часа:</span>
-                      <span className="font-medium">${(product.price * 0.7).toFixed(2)}</span>
+                      <span className="font-medium">{(product.price * 0.7).toFixed(2)} ₽</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="text-muted-foreground">Сутки:</span>
-                      <span className="font-medium">${product.price.toFixed(2)}</span>
+                      <span className="font-medium">{product.price.toFixed(2)} ₽</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="text-muted-foreground">от 3-ех суток:</span>
-                      <span className="font-medium">${(product.price * 0.9).toFixed(2)}/day</span>
+                      <span className="font-medium">{(product.price * 0.9).toFixed(2)} ₽/день</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="text-muted-foreground">от 5 дней:</span>
-                      <span className="font-medium">${(product.price * 0.7).toFixed(2)}/day</span>
+                      <span className="font-medium">{(product.price * 0.7).toFixed(2)} ₽/день</span>
                     </li>
                   </ul>
                 </div>
@@ -288,28 +288,23 @@ const ProductDetail = () => {
                 <p className="text-muted-foreground">
                   {product.description}
                 </p>
-                <p className="text-muted-foreground mt-4">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla eget felis fermentum, 
-                  hendrerit metus ac, malesuada nisl. Nullam elementum venenatis massa, eget finibus tellus
-                  cursus at. Donec aliquam enim id dui imperdiet, sed fringilla sapien condimentum.
-                </p>
               </div>
             </TabsContent>
             
             <TabsContent value="availability">
               <div className="p-6 rounded-xl glass-card">
-                <h3 className="font-medium mb-6">Календарь бронирования.</h3>
+                <h3 className="font-medium mb-6">Календарь бронирования</h3>
                 
                 {product.available ? (
                   <div className="space-y-6">
                     <p className="text-muted-foreground">
-                      Этот товар забронирован. Посмотрите календарь бронирования для выбора свободной даты.
+                      Посмотрите календарь бронирования для выбора свободной даты.
                     </p>
                     
                     <div className="max-w-md mx-auto">
                       <BookingCalendar
                         onBookingChange={handleBookingChange}
-                        bookedPeriods={bookings?.map(b => ({ startDate: b.startDate, endDate: b.endDate }))}
+                        bookedPeriods={bookings}
                       />
                     </div>
                   </div>
@@ -318,7 +313,7 @@ const ProductDetail = () => {
                     <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <CalendarIcon className="h-8 w-8 text-red-500" />
                     </div>
-                    <h3 className="text-xl font-medium mb-2">В настоящее время недоступен.</h3>
+                    <h3 className="text-xl font-medium mb-2">В настоящее время недоступен</h3>
                     <p className="text-muted-foreground mb-6">
                     В данный момент это оборудование недоступно для проката.
                     </p>

@@ -13,7 +13,7 @@ const initializeData = () => {
     const sampleProducts: Product[] = [
       {
         id: '1',
-        uid: 'cam-001',
+        uid: '1',
         title: 'Sony Alpha A7 III',
         description: 'Полнокадровая беззеркальная камера с разрешением 24.2 МП',
         price: 4500,
@@ -24,7 +24,7 @@ const initializeData = () => {
       },
       {
         id: '2',
-        uid: 'lens-001',
+        uid: '2',
         title: 'Canon EF 70-200mm f/2.8L IS III USM',
         description: 'Телеобъектив с постоянной диафрагмой для профессиональных фотографов',
         price: 2800,
@@ -35,7 +35,7 @@ const initializeData = () => {
       },
       {
         id: '3',
-        uid: 'light-001',
+        uid: '3',
         title: 'Godox SL-60W LED',
         description: 'Постоянный LED свет мощностью 60Вт с управлением через пульт',
         price: 1200,
@@ -46,7 +46,7 @@ const initializeData = () => {
       },
       {
         id: '4',
-        uid: 'audio-001',
+        uid: '4',
         title: 'Rode VideoMic Pro+',
         description: 'Направленный микрофон для камер и DSLR с улучшенным качеством звука',
         price: 950,
@@ -57,7 +57,7 @@ const initializeData = () => {
       },
       {
         id: '5',
-        uid: 'stab-001',
+        uid: '5',
         title: 'DJI Ronin-S',
         description: 'Трехосевой стабилизатор для DSLR и беззеркальных камер',
         price: 2100,
@@ -68,7 +68,7 @@ const initializeData = () => {
       },
       {
         id: '6',
-        uid: 'cam-002',
+        uid: '6',
         title: 'Blackmagic Pocket Cinema Camera 6K',
         description: 'Кинокамера с разрешением 6K и записью в Blackmagic RAW',
         price: 5200,
@@ -79,7 +79,7 @@ const initializeData = () => {
       },
       {
         id: '7',
-        uid: 'drone-001',
+        uid: '7',
         title: 'DJI Mavic 3',
         description: 'Профессиональный дрон с камерой Hasselblad и увеличенным временем полета',
         price: 6500,
@@ -90,7 +90,7 @@ const initializeData = () => {
       },
       {
         id: '8',
-        uid: 'audio-002',
+        uid: '8',
         title: 'Zoom H6',
         description: 'Портативный аудиорекордер с 6 входами и сменными микрофонными капсюлями',
         price: 1800,
@@ -254,6 +254,33 @@ export const getCategories = async (): Promise<Category[]> => {
   });
 };
 
+// Функция для добавления новой категории
+export const addCategory = async (categoryName: string): Promise<Category> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '[]');
+      const slug = categoryName.toLowerCase().replace(/\s+/g, '-');
+      
+      // Проверяем, существует ли категория с таким именем
+      const existingCategory = categories.find((c: Category) => c.name.toLowerCase() === categoryName.toLowerCase());
+      
+      if (existingCategory) {
+        resolve(existingCategory);
+      } else {
+        const newCategory = {
+          id: Date.now().toString(),
+          name: categoryName,
+          slug: slug
+        };
+        
+        categories.push(newCategory);
+        localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+        resolve(newCategory);
+      }
+    }, 300);
+  });
+};
+
 // Bookings
 export const getBookings = async (): Promise<BookingPeriod[]> => {
   return new Promise((resolve) => {
@@ -366,9 +393,11 @@ export const importProductsFromCSV = async (csvContent: string): Promise<Product
       const headers = lines[0].split(',');
       
       const products = JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]');
+      const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '[]');
       const existingProductIds = new Set(products.map((p: Product) => p.uid));
       
       const newProducts: Product[] = [];
+      const categoryPromises: Promise<any>[] = [];
       
       for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
@@ -381,6 +410,17 @@ export const importProductsFromCSV = async (csvContent: string): Promise<Product
         
         // Skip if product with this UID already exists
         if (existingProductIds.has(uid)) continue;
+        
+        // Check if category exists, if not - create it
+        const categoryExists = categories.some((c: Category) => c.name === category);
+        if (!categoryExists) {
+          const newCategory = {
+            id: Date.now().toString() + i,
+            name: category,
+            slug: category.toLowerCase().replace(/\s+/g, '-')
+          };
+          categories.push(newCategory);
+        }
         
         const newProduct: Product = {
           id: Date.now().toString() + i, // Generate unique ID
@@ -397,6 +437,9 @@ export const importProductsFromCSV = async (csvContent: string): Promise<Product
         newProducts.push(newProduct);
         existingProductIds.add(uid);
       }
+      
+      // Save updated categories
+      localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
       
       // Add new products to storage
       const updatedProducts = [...products, ...newProducts];

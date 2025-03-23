@@ -41,11 +41,9 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
+  <BrowserRouter>
+    <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
         <Navbar />
         <main className="pt-16">
           <Suspense fallback={<Loading />}>
@@ -89,9 +87,11 @@ const App = () => (
             </Routes>
           </Suspense>
         </main>
+        <Toaster />
+        <Sonner />
       </TooltipProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
+    </QueryClientProvider>
+  </BrowserRouter>
 );
 
 export default App;

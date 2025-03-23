@@ -59,7 +59,8 @@ import {
   updateProduct,
   deleteProduct,
   exportProductsToCSV,
-  importProductsFromCSV
+  importProductsFromCSV,
+  addCategory
 } from '@/services/apiService';
 import { Product, Category } from '@/types/product';
 
@@ -84,6 +85,8 @@ const AdminProducts = () => {
   const [open, setOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showCategoryInput, setShowCategoryInput] = useState(false);
 
   // Fetch products and categories
   const { data: products, isLoading } = useQuery({
@@ -151,10 +154,25 @@ const AdminProducts = () => {
     }
   });
 
+  const addCategoryMutation = useMutation({
+    mutationFn: addCategory,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast({
+        title: 'Категория добавлена',
+        description: `Категория "${data.name}" успешно добавлена`,
+      });
+      setNewCategoryName('');
+      setShowCategoryInput(false);
+      form.setValue('category', data.name);
+    }
+  });
+
   const importMutation = useMutation({
     mutationFn: importProductsFromCSV,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast({
         title: 'Импорт завершен',
         description: `Импортировано ${data.length} товаров`,
@@ -184,6 +202,13 @@ const AdminProducts = () => {
       updateMutation.mutate({ id: editProduct.id, product: values });
     } else {
       createMutation.mutate(values as any);
+    }
+  };
+
+  // Add new category handler
+  const handleAddCategory = () => {
+    if (newCategoryName.trim()) {
+      addCategoryMutation.mutate(newCategoryName);
     }
   };
 
@@ -295,7 +320,7 @@ const AdminProducts = () => {
                         <FormItem>
                           <FormLabel>UID</FormLabel>
                           <FormControl>
-                            <Input placeholder="cam-001" {...field} />
+                            <Input placeholder="1, 2, 3..." {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -307,24 +332,61 @@ const AdminProducts = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Категория</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Выберите категорию" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {categories?.map((category: Category) => (
-                                <SelectItem key={category.id} value={category.name}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          {showCategoryInput ? (
+                            <div className="flex gap-2">
+                              <Input 
+                                placeholder="Новая категория..."
+                                value={newCategoryName}
+                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                className="flex-1"
+                              />
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                onClick={handleAddCategory}
+                                size="sm"
+                              >
+                                Добавить
+                              </Button>
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => setShowCategoryInput(false)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              <Select 
+                                onValueChange={field.onChange} 
+                                defaultValue={field.value}
+                                value={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Выберите категорию" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {categories?.map((category: Category) => (
+                                    <SelectItem key={category.id} value={category.name}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                onClick={() => setShowCategoryInput(true)}
+                                size="sm"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
