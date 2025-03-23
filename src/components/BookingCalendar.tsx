@@ -16,11 +16,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { CalendarIcon, ClockIcon } from 'lucide-react';
-
-interface BookingPeriod {
-  startDate: Date;
-  endDate: Date;
-}
+import { BookingPeriod } from '@/types/product';
 
 interface BookingCalendarProps {
   availabilityPeriods?: BookingPeriod[];
@@ -109,7 +105,18 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
   // Update parent component when booking changes
   React.useEffect(() => {
     if (startDate && endDate && onBookingChange) {
-      onBookingChange({ startDate, endDate });
+      onBookingChange({ 
+        startDate, 
+        endDate, 
+        id: '',
+        productId: '',
+        customerName: '',
+        customerEmail: '',
+        customerPhone: '',
+        status: 'pending',
+        totalPrice: 0,
+        createdAt: new Date()
+      });
     }
   }, [startDate, endDate, onBookingChange]);
 
@@ -137,7 +144,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                   {startDate ? format(startDate, "dd.MM.yyyy") : "Выберите дату"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 glass-panel" align="start">
+              <PopoverContent className="w-auto p-0 bg-white" align="start">
                 <div className="p-3 space-y-3">
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">Выберите дату начала</h4>
@@ -148,7 +155,6 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                     onSelect={handleSelectDate}
                     disabled={(date) => isBefore(date, today) && !isSameDay(date, today)}
                     initialFocus
-                    className="pointer-events-auto"
                   />
                 </div>
               </PopoverContent>
@@ -191,7 +197,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                   {endDate ? format(endDate, "dd.MM.yyyy") : "Выберите дату"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 glass-panel" align="start">
+              <PopoverContent className="w-auto p-0 bg-white" align="start">
                 <div className="p-3 space-y-3">
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">Выберите дату окончания</h4>
@@ -209,7 +215,6 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                     onSelect={handleSelectDate}
                     disabled={(date) => startDate ? isBefore(date, startDate) : false}
                     initialFocus
-                    className="pointer-events-auto"
                   />
                 </div>
               </PopoverContent>
