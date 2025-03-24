@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { SearchIcon, MenuIcon, ShoppingCartIcon, XIcon, LogIn } from 'lucide-react';
+import { SearchIcon, MenuIcon, ShoppingCartIcon, XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -102,16 +102,6 @@ const Navbar = () => {
             </Button>
           </Link>
 
-          <Link to={isAuthenticated ? "/admin" : "/login"}>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20"
-            >
-              <LogIn className="h-5 w-5" />
-            </Button>
-          </Link>
-
           <Sheet>
             <SheetTrigger asChild>
               <Button 
@@ -140,9 +130,11 @@ const Navbar = () => {
                   <Link to="/catalog" className="text-foreground hover:text-primary transition-colors">Каталог</Link>
                   <Link to="/how-it-works" className="text-foreground hover:text-primary transition-colors">Как это работает</Link>
                   <Link to="/contact" className="text-foreground hover:text-primary transition-colors">Контакты</Link>
-                  <Link to={isAuthenticated ? "/admin" : "/login"} className="text-foreground hover:text-primary transition-colors">
-                    {isAuthenticated ? "Админ-панель" : "Вход"}
-                  </Link>
+                  {isAuthenticated && (
+                    <Link to="/admin" className="text-foreground hover:text-primary transition-colors">
+                      Админ-панель
+                    </Link>
+                  )}
                 </nav>
               </div>
             </SheetContent>

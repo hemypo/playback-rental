@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRightIcon, CameraIcon, MusicIcon, MonitorIcon, PackageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import AnimatedTransition from '@/components/AnimatedTransition';
 import ProductCard from '@/components/ProductCard';
 import { BookingCalendar } from '@/components/BookingCalendar';
 import { getProducts, getCategories } from '@/services/apiService';
@@ -29,7 +28,6 @@ const Index = () => {
 
   const handleSearchClick = () => {
     if (bookingPeriod.startDate && bookingPeriod.endDate) {
-      // В реальном приложении мы передадим эти даты как параметры URL
       window.location.href = '/catalog';
     }
   };
@@ -135,7 +133,7 @@ const Index = () => {
               {
                 title: "Забронируйте даты",
                 description: "Выберите предпочтительные даты получения и возврата в нашем календаре доступности.",
-                icon: <CalendarIcon className="h-8 w-8 text-primary" />,
+                icon: <CalendarIconComponent />,
               },
               {
                 title: "Получите и создавайте",
@@ -178,22 +176,8 @@ const Index = () => {
   );
 };
 
-// Helper function to get category icon
-const getCategoryIcon = (categoryName: string) => {
-  switch (categoryName.toLowerCase()) {
-    case 'photography':
-      return <CameraIcon className="h-5 w-5 text-white" />;
-    case 'audio':
-      return <MusicIcon className="h-5 w-5 text-white" />;
-    case 'video':
-      return <MonitorIcon className="h-5 w-5 text-white" />;
-    default:
-      return <PackageIcon className="h-5 w-5 text-white" />;
-  }
-};
-
 // Calendar icon component
-const CalendarIcon = () => (
+const CalendarIconComponent = () => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width="24" 

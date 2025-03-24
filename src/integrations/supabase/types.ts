@@ -18,7 +18,6 @@ export type Database = {
           end_date: string
           id: string
           notes: string | null
-          product_id: string | null
           start_date: string
           status: string
           total_price: number
@@ -31,7 +30,6 @@ export type Database = {
           end_date: string
           id?: string
           notes?: string | null
-          product_id?: string | null
           start_date: string
           status: string
           total_price: number
@@ -44,39 +42,27 @@ export type Database = {
           end_date?: string
           id?: string
           notes?: string | null
-          product_id?: string | null
           start_date?: string
           status?: string
           total_price?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "bookings_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       categories: {
         Row: {
-          created_at: string | null
           id: string
           name: string
-          slug: string
+          slug: string | null
         }
         Insert: {
-          created_at?: string | null
           id?: string
           name: string
-          slug: string
+          slug?: string | null
         }
         Update: {
-          created_at?: string | null
           id?: string
           name?: string
-          slug?: string
+          slug?: string | null
         }
         Relationships: []
       }
@@ -84,7 +70,6 @@ export type Database = {
         Row: {
           available: boolean
           category: string
-          created_at: string | null
           description: string
           id: string
           imageurl: string
@@ -95,7 +80,6 @@ export type Database = {
         Insert: {
           available?: boolean
           category: string
-          created_at?: string | null
           description: string
           id?: string
           imageurl: string
@@ -106,7 +90,6 @@ export type Database = {
         Update: {
           available?: boolean
           category?: string
-          created_at?: string | null
           description?: string
           id?: string
           imageurl?: string
