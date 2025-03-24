@@ -172,7 +172,7 @@ export const getBookings = async (): Promise<BookingPeriod[]> => {
   
   return data.map(booking => ({
     id: booking.id,
-    productId: booking.product_id,
+    productId: booking.product_id || '',
     startDate: new Date(booking.start_date),
     endDate: new Date(booking.end_date),
     customerName: booking.customer_name,
@@ -195,7 +195,7 @@ export const getProductBookings = async (productId: string): Promise<BookingPeri
   
   return data.map(booking => ({
     id: booking.id,
-    productId: booking.product_id,
+    productId: booking.product_id || '',
     startDate: new Date(booking.start_date),
     endDate: new Date(booking.end_date),
     customerName: booking.customer_name,
@@ -242,7 +242,7 @@ export const createBooking = async (booking: BookingFormData): Promise<BookingPe
   
   return {
     id: data.id,
-    productId: data.product_id,
+    productId: data.product_id || '',
     startDate: new Date(data.start_date),
     endDate: new Date(data.end_date),
     customerName: data.customer_name,
@@ -267,7 +267,7 @@ export const updateBookingStatus = async (id: string, status: BookingPeriod['sta
   
   return {
     id: data.id,
-    productId: data.product_id,
+    productId: data.product_id || '',
     startDate: new Date(data.start_date),
     endDate: new Date(data.end_date),
     customerName: data.customer_name,

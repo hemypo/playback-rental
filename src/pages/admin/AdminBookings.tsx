@@ -1,19 +1,37 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import {
-  Search,
-  RefreshCw,
-  Check,
-  X,
-  Clock,
+import { ru } from 'date-fns/locale';
+import { 
+  CheckCircle, 
+  Clock, 
+  XCircle, 
+  FileSpreadsheet,
+  MoreHorizontal,
+  Eye,
   Calendar,
-  FileText,
-  CheckCircle2,
-  XCircle,
-  MoreVertical
+  Phone,
+  Mail,
+  Clock3
 } from 'lucide-react';
+import { getBookings, getProducts, updateBookingStatus } from '@/services/apiService';
+import { BookingPeriod, Product } from '@/types/product';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -22,9 +40,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -34,31 +56,42 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useToast } from '@/components/ui/use-toast';
-import { getBookings, getProducts, updateBookingStatus } from '@/services/apiService';
-import { BookingPeriod, Product } from '@/types/product';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 
 const AdminBookings = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedBooking, setSelectedBooking] = useState<BookingPeriod | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [statusChange, setStatusChange] = useState<{
+    booking: BookingPeriod | null;
+    newStatus: BookingPeriod['status'] | null;
+  }>({ booking: null, newStatus: null });
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const queryClient = useQueryClient();
 
   // Fetch bookings and products
-  const { data: bookings, isLoading } = useQuery({
+  const { data: bookings, isLoading: isLoadingBookings } = useQuery({
     queryKey: ['admin-bookings'],
-    queryFn: getBookings
+    queryFn: () => getBookings()
   });
 
   const { data: products } = useQuery({
     queryKey: ['admin-products'],
-    queryFn: getProducts
+    queryFn: () => getProducts()
   });
 
   // Status update mutation
@@ -76,9 +109,9 @@ const AdminBookings = () => {
 
   // Filter bookings based on search term
   const filteredBookings = bookings?.filter(booking => 
-    booking.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.customerPhone.includes(searchTerm)
+    booking.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    booking.customerEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    booking.customerPhone.includes(searchQuery)
   );
 
   // Get product details by ID
@@ -92,7 +125,7 @@ const AdminBookings = () => {
       case 'confirmed':
         return (
           <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
-            <CheckCircle2 className="h-3 w-3 mr-1" />
+            <CheckCircle className="h-3 w-3 mr-1" />
             Подтверждено
           </Badge>
         );
@@ -129,7 +162,7 @@ const AdminBookings = () => {
   // View booking details
   const viewBookingDetails = (booking: BookingPeriod) => {
     setSelectedBooking(booking);
-    setIsDetailsOpen(true);
+    setShowBookingDialog(true);
   };
 
   // Update booking status
@@ -157,8 +190,8 @@ const AdminBookings = () => {
             </Button>
             <Input
               placeholder="Поиск по имени, email, телефону..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 w-[300px]"
             />
           </div>
@@ -173,7 +206,7 @@ const AdminBookings = () => {
         </div>
       </div>
       
-      {isLoading ? (
+      {isLoadingBookings ? (
         <div className="flex items-center justify-center h-64">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
@@ -182,7 +215,7 @@ const AdminBookings = () => {
           <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium">Заявки не найдены</h3>
           <p className="text-muted-foreground mb-4">
-            {searchTerm 
+            {searchQuery 
               ? 'Попробуйте изменить поисковый запрос'
               : 'У вас пока нет заявок на бронирование'
             }
@@ -291,7 +324,7 @@ const AdminBookings = () => {
       )}
       
       {/* Booking Details Dialog */}
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+      <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>Детали заявки</DialogTitle>
@@ -377,7 +410,7 @@ const AdminBookings = () => {
                     size="sm"
                     onClick={() => {
                       handleStatusUpdate(selectedBooking.id, 'confirmed');
-                      setIsDetailsOpen(false);
+                      setShowBookingDialog(false);
                     }}
                     disabled={selectedBooking.status === 'confirmed'}
                   >
@@ -389,7 +422,7 @@ const AdminBookings = () => {
                     size="sm"
                     onClick={() => {
                       handleStatusUpdate(selectedBooking.id, 'cancelled');
-                      setIsDetailsOpen(false);
+                      setShowBookingDialog(false);
                     }}
                     disabled={selectedBooking.status === 'cancelled'}
                     className="text-red-600"
@@ -401,7 +434,7 @@ const AdminBookings = () => {
                 <Button 
                   variant="default"
                   size="sm"
-                  onClick={() => setIsDetailsOpen(false)}
+                  onClick={() => setShowBookingDialog(false)}
                 >
                   Закрыть
                 </Button>

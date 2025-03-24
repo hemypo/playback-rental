@@ -18,12 +18,12 @@ import { BookingPeriod } from '@/types/product';
 const AdminDashboard = () => {
   const { data: products } = useQuery({
     queryKey: ['admin-products'],
-    queryFn: getProducts
+    queryFn: () => getProducts()
   });
 
   const { data: bookings } = useQuery({
     queryKey: ['admin-bookings'],
-    queryFn: getBookings
+    queryFn: () => getBookings()
   });
 
   // Calculate statistics

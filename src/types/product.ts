@@ -40,3 +40,9 @@ export interface BookingFormData {
   productId: string;
   notes?: string;
 }
+
+export interface ProductFilterParams {
+  category?: string;
+  available?: boolean;
+  search?: string;
+}

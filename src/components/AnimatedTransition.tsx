@@ -28,7 +28,7 @@ const AnimatedTransition: React.FC<AnimatedTransitionProps> = ({
     if (show) {
       setShouldRender(true);
       // Small delay to ensure DOM is ready for animation
-      const timer = setTimeout(() => setIsAnimating(true), 50);
+      const timer = setTimeout(() => setIsAnimating(true), 10);
       return () => clearTimeout(timer);
     } else {
       setIsAnimating(false);

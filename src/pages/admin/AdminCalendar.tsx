@@ -49,17 +49,17 @@ const AdminCalendar = () => {
   // Fetch data
   const { data: bookings } = useQuery({
     queryKey: ['admin-bookings'],
-    queryFn: getBookings
+    queryFn: () => getBookings()
   });
 
   const { data: products } = useQuery({
     queryKey: ['admin-products'],
-    queryFn: getProducts
+    queryFn: () => getProducts()
   });
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
-    queryFn: getCategories
+    queryFn: () => getCategories()
   });
 
   // Combine bookings with product names

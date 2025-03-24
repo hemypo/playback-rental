@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format, addDays, isSameDay, isAfter, isBefore, addHours } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -144,7 +145,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                   {startDate ? format(startDate, "dd.MM.yyyy") : "Выберите дату"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-white" align="start">
+              <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
                 <div className="p-3 space-y-3">
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">Выберите дату начала</h4>
@@ -155,6 +156,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                     onSelect={handleSelectDate}
                     disabled={(date) => isBefore(date, today) && !isSameDay(date, today)}
                     initialFocus
+                    className="pointer-events-auto"
                   />
                 </div>
               </PopoverContent>
@@ -197,7 +199,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                   {endDate ? format(endDate, "dd.MM.yyyy") : "Выберите дату"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-white" align="start">
+              <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
                 <div className="p-3 space-y-3">
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">Выберите дату окончания</h4>
@@ -215,6 +217,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                     onSelect={handleSelectDate}
                     disabled={(date) => startDate ? isBefore(date, startDate) : false}
                     initialFocus
+                    className="pointer-events-auto"
                   />
                 </div>
               </PopoverContent>
