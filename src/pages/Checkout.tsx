@@ -143,18 +143,6 @@ const Checkout = () => {
               <CardDescription>Заполните информацию о вашем бронировании</CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="details" className="w-full">
-                <TabsList className="grid grid-cols-2 mb-8">
-                  <TabsTrigger value="details">
-                    <UserIcon className="h-4 w-4 mr-2" />
-                    Личные данные
-                  </TabsTrigger>
-                  <TabsTrigger value="payment">
-                    <CreditCardIcon className="h-4 w-4 mr-2" />
-                    Оплата
-                  </TabsTrigger>
-                </TabsList>
-                
                 <TabsContent value="details" className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
@@ -217,7 +205,7 @@ const Checkout = () => {
                     Отправка...
                   </>
                 ) : (
-                  'Бронирование подтверждено'
+                  'Оформить заказ'
                 )}
               </Button>
             </CardFooter>

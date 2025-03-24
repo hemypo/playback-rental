@@ -188,24 +188,6 @@ const Catalog = () => {
           </div>
         )}
         
-        {/* Results count */}
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-xl font-medium">
-            {isLoading ? 'Loading...' : `${products?.length || 0} items found`}
-          </h2>
-          <Select defaultValue="relevance">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="relevance">Популярное</SelectItem>
-              <SelectItem value="price-asc">Цена: по возрастанию</SelectItem>
-              <SelectItem value="price-desc">Цена: по убыванию</SelectItem>
-              <SelectItem value="newest">Последние</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
         {/* Products grid */}
         <AnimatedTransition show={true} type="fade">
           {isLoading ? (
