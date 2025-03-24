@@ -84,7 +84,7 @@ const Checkout = () => {
         </Link>
       </div>
       
-      <h1 className="heading-2 mb-8">Корзинаt</h1>
+      <h1 className="heading-2 mb-8">Корзина</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
@@ -143,6 +143,7 @@ const Checkout = () => {
               <CardDescription>Заполните информацию о вашем бронировании</CardDescription>
             </CardHeader>
             <CardContent>
+              <Tabs defaultValue="details" className="w-full">
                 <TabsContent value="details" className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
@@ -205,7 +206,7 @@ const Checkout = () => {
                     Отправка...
                   </>
                 ) : (
-                  'Оформить заказ'
+                  'Бронирование подтверждено'
                 )}
               </Button>
             </CardFooter>
