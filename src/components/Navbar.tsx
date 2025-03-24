@@ -8,12 +8,14 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import AnimatedTransition from './AnimatedTransition';
 import { cn } from '@/lib/utils';
 import { checkAuth } from '@/services/apiService';
+import { useCart } from '@/hooks/use-cart';
 
 const Navbar = () => {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const isAuthenticated = checkAuth();
+  const { itemCount } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -96,9 +98,11 @@ const Navbar = () => {
               className="rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 relative"
             >
               <ShoppingCartIcon className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                0
-              </span>
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
             </Button>
           </Link>
 
