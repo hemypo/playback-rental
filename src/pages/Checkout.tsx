@@ -165,10 +165,6 @@ const Checkout = () => {
                     <label className="text-sm font-medium">Телефон</label>
                     <Input type="tel" />
                   </div>
-                  
-                  <div className="pt-4">
-                    <Button className="w-full" size="lg">Оплата</Button>
-                  </div>
                 </TabsContent>
               </Tabs>
             </CardContent>
