@@ -145,7 +145,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                   {startDate ? format(startDate, "dd.MM.yyyy") : "Выберите дату"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+              <PopoverContent className="w-auto p-0 z-50 pointer-events-auto" align="start">
                 <div className="p-3 space-y-3">
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">Выберите дату начала</h4>
