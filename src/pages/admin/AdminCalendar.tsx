@@ -155,7 +155,7 @@ const AdminCalendar = () => {
               <SelectValue placeholder="Все категории" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Все категории</SelectItem>
+              <SelectItem value="all">Все категории</SelectItem>
               {categories?.map((category: Category) => (
                 <SelectItem key={category.id} value={category.name}>
                   {category.name}

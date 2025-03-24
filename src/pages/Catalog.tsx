@@ -22,7 +22,7 @@ import {
 import ProductCard from '@/components/ProductCard';
 import { BookingCalendar } from '@/components/BookingCalendar';
 import AnimatedTransition from '@/components/AnimatedTransition';
-import BitrixService from '@/services/bitrixService';
+import * as supabaseService from '@/services/supabaseService';
 
 const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -36,7 +36,7 @@ const Catalog = () => {
   // Get categories
   const { data: categories } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => BitrixService.getCategories(),
+    queryFn: () => supabaseService.getCategories(),
   });
   
   // Get products with filters
@@ -45,10 +45,10 @@ const Catalog = () => {
     queryFn: async () => {
       if (startDate && endDate) {
         // If dates are selected, get available products for that period
-        return BitrixService.getAvailableProducts(startDate, endDate);
+        return supabaseService.getAvailableProducts(startDate, endDate);
       } else {
         // Otherwise, get all products with category/search filters
-        return BitrixService.getProducts({ category, search });
+        return supabaseService.getProducts({ category, search });
       }
     },
   });
@@ -135,7 +135,7 @@ const Catalog = () => {
                         <SelectValue placeholder="All Categories" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Все категории</SelectItem>
+                        <SelectItem value="all">Все категории</SelectItem>
                         {categories?.map((cat) => (
                           <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                         ))}

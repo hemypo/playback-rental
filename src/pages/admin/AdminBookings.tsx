@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -187,7 +188,7 @@ const AdminBookings = () => {
                           booking.status === 'pending'
                             ? 'secondary'
                             : booking.status === 'confirmed'
-                            ? 'success'
+                            ? 'default'
                             : booking.status === 'cancelled'
                             ? 'destructive'
                             : 'outline'
