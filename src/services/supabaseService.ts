@@ -163,96 +163,90 @@ export const addCategory = async (categoryName: string): Promise<Category> => {
 };
 
 // Bookings
+const mapBookingData = (data: any): BookingPeriod => {
+  return {
+    id: data.id,
+    productId: data.productId || '',
+    startDate: new Date(data.start_date),
+    endDate: new Date(data.end_date),
+    customerName: data.customer_name,
+    customerEmail: data.customer_email,
+    customerPhone: data.customer_phone,
+    status: data.status as BookingPeriod['status'],
+    totalPrice: data.total_price,
+    notes: data.notes || '',
+    createdAt: new Date(data.created_at)
+  };
+};
+
 export const getBookings = async (): Promise<BookingPeriod[]> => {
   const { data, error } = await supabase
     .from('bookings')
-    .select('*');
-  
-  if (error) throw error;
-  
-  return data.map(booking => ({
-    id: booking.id,
-    productId: booking.product_id || '',
-    startDate: new Date(booking.start_date),
-    endDate: new Date(booking.end_date),
-    customerName: booking.customer_name,
-    customerEmail: booking.customer_email,
-    customerPhone: booking.customer_phone,
-    status: booking.status as 'pending' | 'confirmed' | 'cancelled' | 'completed',
-    totalPrice: Number(booking.total_price),
-    notes: booking.notes || '',
-    createdAt: new Date(booking.created_at)
-  }));
+    .select('*')
+    .order('created_at', { ascending: false });
+    
+  if (error) {
+    console.error('Error fetching bookings:', error);
+    throw new Error(error.message);
+  }
+
+  return (data || []).map(mapBookingData);
 };
 
 export const getProductBookings = async (productId: string): Promise<BookingPeriod[]> => {
   const { data, error } = await supabase
     .from('bookings')
     .select('*')
-    .eq('product_id', productId);
-  
-  if (error) throw error;
-  
-  return data.map(booking => ({
-    id: booking.id,
-    productId: booking.product_id || '',
-    startDate: new Date(booking.start_date),
-    endDate: new Date(booking.end_date),
-    customerName: booking.customer_name,
-    customerEmail: booking.customer_email,
-    customerPhone: booking.customer_phone,
-    status: booking.status as 'pending' | 'confirmed' | 'cancelled' | 'completed',
-    totalPrice: Number(booking.total_price),
-    notes: booking.notes || '',
-    createdAt: new Date(booking.created_at)
-  }));
+    .eq('productId', productId)
+    .order('start_date', { ascending: true });
+    
+  if (error) {
+    console.error('Error fetching product bookings:', error);
+    throw new Error(error.message);
+  }
+
+  return (data || []).map(mapBookingData);
 };
 
-export const createBooking = async (booking: BookingFormData): Promise<BookingPeriod> => {
-  // Get product to calculate price
-  const { data: product } = await supabase
-    .from('products')
-    .select('price')
-    .eq('id', booking.productId)
-    .single();
+export const createBooking = async (bookingData: BookingFormData): Promise<BookingPeriod> => {
+  // Convert the booking data to the format expected by Supabase
+  const supabaseBookingData = {
+    productId: bookingData.productId,
+    start_date: bookingData.startDate.toISOString(),
+    end_date: bookingData.endDate.toISOString(),
+    customer_name: bookingData.name,
+    customer_email: bookingData.email,
+    customer_phone: bookingData.phone,
+    notes: bookingData.notes || '',
+    status: 'pending' as const,
+    total_price: 0 // Will calculate this based on the product price
+  };
   
-  if (!product) throw new Error('Product not found');
+  // Get the product to calculate the price
+  const product = await getProductById(bookingData.productId);
+  if (!product) {
+    throw new Error('Product not found');
+  }
   
-  // Calculate days between start and end date
-  const days = Math.ceil((booking.endDate.getTime() - booking.startDate.getTime()) / (1000 * 60 * 60 * 24));
-  const totalPrice = Number(product.price) * days;
+  // Calculate total price based on number of days
+  const days = Math.ceil(
+    (bookingData.endDate.getTime() - bookingData.startDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  supabaseBookingData.total_price = product.price * days;
   
+  // Insert the booking
   const { data, error } = await supabase
     .from('bookings')
-    .insert([{
-      product_id: booking.productId,
-      start_date: booking.startDate.toISOString(),
-      end_date: booking.endDate.toISOString(),
-      customer_name: booking.name,
-      customer_email: booking.email,
-      customer_phone: booking.phone,
-      status: 'pending',
-      total_price: totalPrice,
-      notes: booking.notes || null
-    }])
+    .insert(supabaseBookingData)
     .select()
     .single();
+    
+  if (error) {
+    console.error('Error creating booking:', error);
+    throw new Error(error.message);
+  }
   
-  if (error) throw error;
-  
-  return {
-    id: data.id,
-    productId: data.product_id || '',
-    startDate: new Date(data.start_date),
-    endDate: new Date(data.end_date),
-    customerName: data.customer_name,
-    customerEmail: data.customer_email,
-    customerPhone: data.customer_phone,
-    status: data.status as 'pending' | 'confirmed' | 'cancelled' | 'completed',
-    totalPrice: Number(data.total_price),
-    notes: data.notes || '',
-    createdAt: new Date(data.created_at)
-  };
+  return mapBookingData(data);
 };
 
 export const updateBookingStatus = async (id: string, status: BookingPeriod['status']): Promise<BookingPeriod> => {
@@ -262,22 +256,13 @@ export const updateBookingStatus = async (id: string, status: BookingPeriod['sta
     .eq('id', id)
     .select()
     .single();
+    
+  if (error) {
+    console.error('Error updating booking status:', error);
+    throw new Error(error.message);
+  }
   
-  if (error) throw error;
-  
-  return {
-    id: data.id,
-    productId: data.product_id || '',
-    startDate: new Date(data.start_date),
-    endDate: new Date(data.end_date),
-    customerName: data.customer_name,
-    customerEmail: data.customer_email,
-    customerPhone: data.customer_phone,
-    status: data.status as 'pending' | 'confirmed' | 'cancelled' | 'completed',
-    totalPrice: Number(data.total_price),
-    notes: data.notes || '',
-    createdAt: new Date(data.created_at)
-  };
+  return mapBookingData(data);
 };
 
 // File exports/imports

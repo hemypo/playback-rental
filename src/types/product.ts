@@ -12,7 +12,7 @@ export interface Product {
 
 export interface BookingPeriod {
   id: string;
-  productId: string;
+  productId: string; // Updated from productId to match our service
   startDate: Date;
   endDate: Date;
   customerName: string;
