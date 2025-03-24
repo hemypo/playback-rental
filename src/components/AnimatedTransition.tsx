@@ -28,7 +28,7 @@ const AnimatedTransition: React.FC<AnimatedTransitionProps> = ({
     if (show) {
       setShouldRender(true);
       // Small delay to ensure DOM is ready for animation
-      const timer = setTimeout(() => setIsAnimating(true), 10);
+      const timer = setTimeout(() => setIsAnimating(true), 50);
       return () => clearTimeout(timer);
     } else {
       setIsAnimating(false);
@@ -42,7 +42,7 @@ const AnimatedTransition: React.FC<AnimatedTransitionProps> = ({
   if (!shouldRender) return null;
 
   const getAnimationClasses = () => {
-    const baseClasses = 'transition-all';
+    const baseClasses = 'transition-all overflow-hidden';
     const durationClass = `duration-${duration}`;
     
     switch (type) {
