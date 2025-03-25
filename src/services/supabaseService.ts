@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Product, BookingPeriod, Category, BookingFormData } from "@/types/product";
 
@@ -9,7 +10,7 @@ export const getProducts = async (): Promise<Product[]> => {
   
   if (error) throw error;
   
-  return data.map(product => ({
+  return (data || []).map(product => ({
     id: product.id,
     title: product.title,
     description: product.description,
@@ -72,17 +73,19 @@ export const createProduct = async (product: Omit<Product, 'id'>): Promise<Produ
 };
 
 export const updateProduct = async (id: string, product: Partial<Product>): Promise<Product> => {
+  const updateData: any = {};
+  
+  if (product.title !== undefined) updateData.title = product.title;
+  if (product.description !== undefined) updateData.description = product.description;
+  if (product.price !== undefined) updateData.price = product.price;
+  if (product.category !== undefined) updateData.category = product.category;
+  if (product.imageUrl !== undefined) updateData.imageurl = product.imageUrl;
+  if (product.available !== undefined) updateData.available = product.available;
+  if (product.quantity !== undefined) updateData.quantity = product.quantity;
+  
   const { data, error } = await supabase
     .from('products')
-    .update({
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      category: product.category,
-      imageurl: product.imageUrl,
-      available: product.available,
-      quantity: product.quantity
-    })
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();
@@ -118,10 +121,10 @@ export const getCategories = async (): Promise<Category[]> => {
   
   if (error) throw error;
   
-  return data.map(category => ({
+  return (data || []).map(category => ({
     id: category.id,
     name: category.name,
-    slug: category.slug
+    slug: category.slug || ''
   }));
 };
 
@@ -137,7 +140,7 @@ export const addCategory = async (categoryName: string): Promise<Category> => {
     return {
       id: existingCategory.id,
       name: existingCategory.name,
-      slug: existingCategory.slug
+      slug: existingCategory.slug || ''
     };
   }
   
@@ -158,7 +161,7 @@ export const addCategory = async (categoryName: string): Promise<Category> => {
   return {
     id: data.id,
     name: data.name,
-    slug: data.slug
+    slug: data.slug || ''
   };
 };
 
@@ -175,7 +178,7 @@ const mapBookingData = (data: any): BookingPeriod => {
     status: data.status as BookingPeriod['status'],
     totalPrice: data.total_price,
     notes: data.notes || '',
-    createdAt: new Date(data.created_at)
+    createdAt: new Date(data.created_at || Date.now())
   };
 };
 

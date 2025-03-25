@@ -4,11 +4,8 @@ import { Link } from 'react-router-dom';
 import { 
   ArrowLeftIcon, 
   CalendarIcon, 
-  CreditCardIcon, 
-  PackageIcon, 
   ShieldCheckIcon, 
-  TrashIcon, 
-  UserIcon 
+  TrashIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,39 +18,82 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDateRange } from '@/utils/dateUtils';
-
-// Mock cart data for demonstration
-const MOCK_CART_ITEMS = [
-  {
-    id: '1',
-    title: 'Professional DSLR Camera',
-    price: 89.99,
-    imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000&auto=format&fit=crop',
-    startDate: new Date(2023, 10, 25, 10, 0),
-    endDate: new Date(2023, 10, 27, 18, 0),
-  }
-];
+import { useCartContext } from '@/hooks/useCart';
+import { createBooking } from '@/services/apiService';
+import { toast } from '@/hooks/use-toast';
 
 const Checkout = () => {
-  const [step, setStep] = useState<'cart' | 'details' | 'payment' | 'confirmation'>('cart');
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
+
+  const { 
+    cartItems, 
+    removeFromCart, 
+    getCartTotal, 
+    clearCart 
+  } = useCartContext();
   
-  // Calculate totals
-  const subtotal = MOCK_CART_ITEMS.reduce((acc, item) => acc + item.price, 0);
-  const insuranceFee = 9.99;
-  const total = subtotal + insuranceFee;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
   
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
+    if (!formData.name || !formData.email || !formData.phone) {
+      toast({
+        title: "Необходимо заполнить все поля",
+        description: "Пожалуйста, заполните все поля формы для оформления заказа",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (cartItems.length === 0) {
+      toast({
+        title: "Корзина пуста",
+        description: "Добавьте товары в корзину перед оформлением заказа",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // Create bookings for each cart item
+      for (const item of cartItems) {
+        await createBooking({
+          productId: item.productId,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          startDate: item.startDate,
+          endDate: item.endDate,
+          notes: `Бронирование из корзины: ${item.title}`
+        });
+      }
+      
+      // Clear the cart after successful checkout
+      clearCart();
+      
+      // Show success
       setOrderComplete(true);
-    }, 2000);
+    } catch (error) {
+      console.error('Error during checkout:', error);
+      toast({
+        title: "Ошибка при оформлении заказа",
+        description: "Пожалуйста, попробуйте еще раз позже",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   
   if (orderComplete) {
@@ -94,12 +134,12 @@ const Checkout = () => {
               <CardDescription>Проверьте ваш заказ перед оформлением</CardDescription>
             </CardHeader>
             <CardContent>
-              {MOCK_CART_ITEMS.length === 0 ? (
+              {cartItems.length === 0 ? (
                 <div className="text-center py-10">
-                  <PackageIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <ShieldCheckIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-xl font-medium mb-2">Ваша корзина пуста</h3>
                   <p className="text-muted-foreground mb-6">
-                  Похоже, вы еще не добавили какое-либо оборудование в свою корзину..
+                  Похоже, вы еще не добавили какое-либо оборудование в свою корзину.
                   </p>
                   <Button asChild>
                     <Link to="/catalog">Просмотр каталога</Link>
@@ -107,31 +147,43 @@ const Checkout = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {MOCK_CART_ITEMS.map((item) => (
-                    <div key={item.id} className="flex gap-4">
-                      <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 subtle-ring">
-                        <img 
-                          src={item.imageUrl} 
-                          alt={item.title} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      
-                      <div className="flex-1">
-                        <h3 className="font-medium mb-1">{item.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          <CalendarIcon className="inline-block h-3 w-3 mr-1" />
-                          {formatDateRange(item.startDate, item.endDate)}
-                        </p>
-                        <div className="flex justify-between items-center">
-                          <p className="font-medium">${item.price.toFixed(2)}</p>
-                          <Button variant="ghost" size="sm" className="h-8 text-muted-foreground hover:text-destructive">
-                            <TrashIcon className="h-4 w-4" />
-                          </Button>
+                  {cartItems.map((item) => {
+                    const days = Math.ceil(
+                      (item.endDate.getTime() - item.startDate.getTime()) / (1000 * 60 * 60 * 24)
+                    );
+                    const itemTotal = item.price * days;
+                    
+                    return (
+                      <div key={item.id} className="flex gap-4">
+                        <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 subtle-ring">
+                          <img 
+                            src={item.imageUrl} 
+                            alt={item.title} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        
+                        <div className="flex-1">
+                          <h3 className="font-medium mb-1">{item.title}</h3>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            <CalendarIcon className="inline-block h-3 w-3 mr-1" />
+                            {formatDateRange(item.startDate, item.endDate)}
+                          </p>
+                          <div className="flex justify-between items-center">
+                            <p className="font-medium">{itemTotal.toFixed(2)} ₽</p>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 text-muted-foreground hover:text-destructive"
+                              onClick={() => removeFromCart(item.id)}
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
@@ -143,30 +195,40 @@ const Checkout = () => {
               <CardDescription>Заполните информацию о вашем бронировании</CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="details" className="w-full">
-                <TabsContent value="details" className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Имя</label>
-                      <Input />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Фамилия</label>
-                      <Input />
-                    </div>
-                  </div>
-                  
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">E-mail</label>
-                    <Input type="email" />
+                    <label className="text-sm font-medium" htmlFor="name">Имя</label>
+                    <Input 
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                    />
                   </div>
-                  
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Телефон</label>
-                    <Input type="tel" />
+                    <label className="text-sm font-medium" htmlFor="email">E-mail</label>
+                    <Input 
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                    />
                   </div>
-                </TabsContent>
-              </Tabs>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="phone">Телефон</label>
+                  <Input 
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -177,16 +239,25 @@ const Checkout = () => {
               <CardTitle>Ваш заказ</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Professional DSLR Camera</span>
-                <span>${subtotal.toFixed(2)}</span>
-              </div>
+              {cartItems.map((item) => {
+                const days = Math.ceil(
+                  (item.endDate.getTime() - item.startDate.getTime()) / (1000 * 60 * 60 * 24)
+                );
+                const itemTotal = item.price * days;
+                
+                return (
+                  <div key={item.id} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{item.title}</span>
+                    <span>{itemTotal.toFixed(2)} ₽</span>
+                  </div>
+                );
+              })}
               
               <Separator />
               
               <div className="flex justify-between text-lg font-semibold">
-                <span>Стоимость:</span>
-                <span>${total.toFixed(2)}</span>
+                <span>Итого:</span>
+                <span>{getCartTotal().toFixed(2)} ₽</span>
               </div>
             </CardContent>
             <CardFooter>
@@ -194,7 +265,7 @@ const Checkout = () => {
                 className="w-full" 
                 size="lg"
                 onClick={handleCheckout}
-                disabled={loading || MOCK_CART_ITEMS.length === 0}
+                disabled={loading || cartItems.length === 0}
               >
                 {loading ? (
                   <>

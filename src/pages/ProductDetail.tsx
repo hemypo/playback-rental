@@ -27,12 +27,14 @@ import PricingCalculator from '@/components/PricingCalculator';
 import { getProductById, getProductBookings } from '@/services/apiService';
 import { formatDateRange } from '@/utils/dateUtils';
 import { BookingPeriod, Product } from '@/types/product';
+import { useCartContext } from '@/hooks/useCart';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [booking, setBooking] = useState<BookingPeriod | null>(null);
+  const [bookingDates, setBookingDates] = useState<{startDate?: Date, endDate?: Date}>({});
   const [addingToCart, setAddingToCart] = useState(false);
+  const { addToCart } = useCartContext();
 
   // Fetch product details
   const { data: product, isLoading } = useQuery({
@@ -51,21 +53,31 @@ const ProductDetail = () => {
   });
 
   const handleBookingChange = (bookingPeriod: BookingPeriod) => {
-    setBooking(bookingPeriod);
+    setBookingDates({
+      startDate: bookingPeriod.startDate,
+      endDate: bookingPeriod.endDate
+    });
   };
 
   const handleAddToCart = () => {
-    if (!booking || !product) return;
+    if (!product || !bookingDates.startDate || !bookingDates.endDate) return;
     
     setAddingToCart(true);
     
-    // Simulate adding to cart
-    setTimeout(() => {
+    const success = addToCart(
+      product, 
+      bookingDates.startDate, 
+      bookingDates.endDate
+    );
+    
+    if (success) {
+      setTimeout(() => {
+        setAddingToCart(false);
+        navigate('/checkout');
+      }, 1000);
+    } else {
       setAddingToCart(false);
-      // In a real app, this would add the item to the cart
-      // and redirect to checkout or stay on page
-      navigate('/checkout');
-    }, 1000);
+    }
   };
 
   if (isLoading) {
@@ -154,29 +166,29 @@ const ProductDetail = () => {
                 bookedPeriods={bookings}
               />
 
-              {booking?.startDate && booking?.endDate && (
+              {bookingDates.startDate && bookingDates.endDate && (
                 <PricingCalculator
                   basePrice={product.price}
-                  startDate={booking.startDate}
-                  endDate={booking.endDate}
+                  startDate={bookingDates.startDate}
+                  endDate={bookingDates.endDate}
                 />
               )}
 
               <Button 
                 size="lg"
                 className="w-full"
-                disabled={!product.available || !booking?.startDate || !booking?.endDate || addingToCart}
+                disabled={!product.available || !bookingDates.startDate || !bookingDates.endDate || addingToCart}
                 onClick={handleAddToCart}
               >
                 {addingToCart ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    в процессе...
+                    В процессе...
                   </>
                 ) : (
                   <>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {booking?.startDate && booking?.endDate ? 'Забронировать' : 'Выберите даты'}
+                    {bookingDates.startDate && bookingDates.endDate ? 'Добавить в корзину' : 'Выберите даты'}
                   </>
                 )}
               </Button>

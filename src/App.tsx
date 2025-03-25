@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { seedDatabase } from "./utils/seedDatabase";
+import { CartProvider } from "./hooks/useCart";
 
 // Pages
 import Index from "./pages/Index";
@@ -51,51 +52,53 @@ const App = () => {
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Navbar />
-          <main className="pt-16">
-            <Suspense fallback={<Loading />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/catalog" element={<Catalog />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/how-it-works" element={<HowItWorks />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/login" element={<Login />} />
-                
-                {/* Admin routes with authentication */}
-                <Route path="/admin" element={
-                  <RequireAuth>
-                    <Admin />
-                  </RequireAuth>
-                } />
-                <Route path="/admin/dashboard" element={
-                  <RequireAuth>
-                    <AdminDashboard />
-                  </RequireAuth>
-                } />
-                <Route path="/admin/products" element={
-                  <RequireAuth>
-                    <AdminProducts />
-                  </RequireAuth>
-                } />
-                <Route path="/admin/bookings" element={
-                  <RequireAuth>
-                    <AdminBookings />
-                  </RequireAuth>
-                } />
-                <Route path="/admin/calendar" element={
-                  <RequireAuth>
-                    <AdminCalendar />
-                  </RequireAuth>
-                } />
-                
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </main>
-          <Toaster />
-          <Sonner />
+          <CartProvider>
+            <Navbar />
+            <main className="pt-16">
+              <Suspense fallback={<Loading />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/catalog" element={<Catalog />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/login" element={<Login />} />
+                  
+                  {/* Admin routes with authentication */}
+                  <Route path="/admin" element={
+                    <RequireAuth>
+                      <Admin />
+                    </RequireAuth>
+                  } />
+                  <Route path="/admin/dashboard" element={
+                    <RequireAuth>
+                      <AdminDashboard />
+                    </RequireAuth>
+                  } />
+                  <Route path="/admin/products" element={
+                    <RequireAuth>
+                      <AdminProducts />
+                    </RequireAuth>
+                  } />
+                  <Route path="/admin/bookings" element={
+                    <RequireAuth>
+                      <AdminBookings />
+                    </RequireAuth>
+                  } />
+                  <Route path="/admin/calendar" element={
+                    <RequireAuth>
+                      <AdminCalendar />
+                    </RequireAuth>
+                  } />
+                  
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </main>
+            <Toaster />
+            <Sonner />
+          </CartProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </BrowserRouter>

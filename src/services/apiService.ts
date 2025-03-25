@@ -1,86 +1,166 @@
 
 // This is a wrapper around our Supabase service to maintain backward compatibility
 import * as supabaseService from './supabaseService';
-import { Product, BookingPeriod, Category, BookingFormData } from "@/types/product";
-
-type ProductFilterParams = {
-  category?: string;
-  search?: string;
-};
+import { Product, BookingPeriod, Category, BookingFormData, ProductFilterParams } from "@/types/product";
 
 // Get all products
 export const getProducts = async (params?: ProductFilterParams): Promise<Product[]> => {
-  return supabaseService.getProducts();
+  try {
+    return await supabaseService.getProducts();
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
 };
 
 // Get a single product by ID
 export const getProductById = async (id: string): Promise<Product> => {
-  return supabaseService.getProductById(id);
+  try {
+    return await supabaseService.getProductById(id);
+  } catch (error) {
+    console.error(`Error fetching product with ID ${id}:`, error);
+    throw error;
+  }
 };
 
 // Create a new product
 export const createProduct = async (product: Omit<Product, 'id'>): Promise<Product> => {
-  return supabaseService.createProduct(product);
+  try {
+    return await supabaseService.createProduct(product);
+  } catch (error) {
+    console.error('Error creating product:', error);
+    throw error;
+  }
 };
 
 // Update a product
 export const updateProduct = async (id: string, product: Partial<Product>): Promise<Product> => {
-  return supabaseService.updateProduct(id, product);
+  try {
+    return await supabaseService.updateProduct(id, product);
+  } catch (error) {
+    console.error(`Error updating product with ID ${id}:`, error);
+    throw error;
+  }
 };
 
 // Delete a product
 export const deleteProduct = async (id: string): Promise<void> => {
-  return supabaseService.deleteProduct(id);
+  try {
+    return await supabaseService.deleteProduct(id);
+  } catch (error) {
+    console.error(`Error deleting product with ID ${id}:`, error);
+    throw error;
+  }
 };
 
 // Categories
 export const getCategories = async (): Promise<Category[]> => {
-  return supabaseService.getCategories();
+  try {
+    return await supabaseService.getCategories();
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
 };
 
 export const addCategory = async (categoryName: string): Promise<Category> => {
-  return supabaseService.addCategory(categoryName);
+  try {
+    return await supabaseService.addCategory(categoryName);
+  } catch (error) {
+    console.error(`Error adding category ${categoryName}:`, error);
+    throw error;
+  }
 };
 
 // Bookings
 export const getBookings = async (): Promise<BookingPeriod[]> => {
-  return supabaseService.getBookings();
+  try {
+    return await supabaseService.getBookings();
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    throw error;
+  }
 };
 
 export const getProductBookings = async (productId: string): Promise<BookingPeriod[]> => {
-  return supabaseService.getProductBookings(productId);
+  try {
+    return await supabaseService.getProductBookings(productId);
+  } catch (error) {
+    console.error(`Error fetching bookings for product ${productId}:`, error);
+    throw error;
+  }
 };
 
 export const createBooking = async (booking: BookingFormData): Promise<BookingPeriod> => {
-  return supabaseService.createBooking(booking);
+  try {
+    return await supabaseService.createBooking(booking);
+  } catch (error) {
+    console.error('Error creating booking:', error);
+    throw error;
+  }
 };
 
 export const updateBookingStatus = async (id: string, status: BookingPeriod['status']): Promise<BookingPeriod> => {
-  return supabaseService.updateBookingStatus(id, status);
+  try {
+    return await supabaseService.updateBookingStatus(id, status);
+  } catch (error) {
+    console.error(`Error updating booking status for ID ${id}:`, error);
+    throw error;
+  }
 };
 
 // File exports/imports
 export const exportProductsToCSV = async (): Promise<string> => {
-  return supabaseService.exportProductsToCSV();
+  try {
+    return await supabaseService.exportProductsToCSV();
+  } catch (error) {
+    console.error('Error exporting products to CSV:', error);
+    throw error;
+  }
 };
 
 export const importProductsFromCSV = async (csvContent: string): Promise<Product[]> => {
-  return supabaseService.importProductsFromCSV(csvContent);
+  try {
+    return await supabaseService.importProductsFromCSV(csvContent);
+  } catch (error) {
+    console.error('Error importing products from CSV:', error);
+    throw error;
+  }
 };
 
 // Auth
 export const login = async (username: string, password: string): Promise<{ success: boolean; token?: string }> => {
-  return supabaseService.login(username, password);
+  try {
+    return await supabaseService.login(username, password);
+  } catch (error) {
+    console.error('Error during login:', error);
+    throw error;
+  }
 };
 
 export const logout = (): void => {
-  supabaseService.logout();
+  try {
+    supabaseService.logout();
+  } catch (error) {
+    console.error('Error during logout:', error);
+    throw error;
+  }
 };
 
 export const checkAuth = (): boolean => {
-  return supabaseService.checkAuth();
+  try {
+    return supabaseService.checkAuth();
+  } catch (error) {
+    console.error('Error checking authentication:', error);
+    return false;
+  }
 };
 
 export const getCurrentUser = () => {
-  return supabaseService.getCurrentUser();
+  try {
+    return supabaseService.getCurrentUser();
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
 };

@@ -1,67 +1,54 @@
-
-/**
- * Calculates the rental price based on the base price and rental duration.
- * 
- * Pricing rules:
- * - 4 hours: 0.7x daily rate
- * - 1 day: base rate
- * - 3+ days: 10% discount per day
- * - 5+ days: 30% discount per day
- */
+// Calculate rental price based on number of days
 export const calculateRentalPrice = (
   basePrice: number,
-  hours: number
-): {
-  total: number;
-  subtotal: number;
-  discount: number;
-  hourlyRate: number;
-  dayDiscount: number;
-} => {
-  // Calculate the number of full days and remaining hours
-  const days = Math.floor(hours / 24);
-  const remainingHours = hours % 24;
+  startDate: Date,
+  endDate: Date
+): number => {
+  // Calculate days between dates
+  const millisPerDay = 1000 * 60 * 60 * 24;
+  const days = Math.ceil((endDate.getTime() - startDate.getTime()) / millisPerDay);
   
-  let dayRate = basePrice;
-  let dayDiscount = 0;
-  
-  // Apply discount based on the total number of days
+  // Apply discount based on duration
+  let discount = 0;
   if (days >= 5) {
-    dayDiscount = 30;
-    dayRate = basePrice * 0.7; // 30% discount
+    discount = 0.3; // 30% off for 5+ days
   } else if (days >= 3) {
-    dayDiscount = 10;
-    dayRate = basePrice * 0.9; // 10% discount
+    discount = 0.1; // 10% off for 3+ days
   }
   
-  // Calculate the cost for full days
-  const daysTotal = days * dayRate;
-  
-  // Calculate the cost for remaining hours
-  let hoursTotal = 0;
-  
-  if (remainingHours > 0) {
-    if (remainingHours <= 4) {
-      // 4 hours rate: 0.7x daily rate
-      hoursTotal = basePrice * 0.7;
-    } else {
-      // More than 4 hours is charged as a full day
-      hoursTotal = dayRate;
+  // Calculate hourly rate if less than a day
+  if (days < 1) {
+    const hours = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60));
+    // 4 hours is 70% of the daily rate
+    if (hours <= 4) {
+      return basePrice * 0.7;
     }
   }
   
-  const subtotal = days * basePrice + (remainingHours > 0 ? basePrice : 0);
-  const total = daysTotal + hoursTotal;
-  const discount = subtotal - total;
-  
-  // Calculate effective hourly rate for display purposes
-  const hourlyRate = total / hours;
-  
-  return {
-    total,
-    subtotal,
-    discount,
-    hourlyRate,
-    dayDiscount,
-  };
+  const pricePerDay = basePrice * (1 - discount);
+  return pricePerDay * days;
+};
+
+// Format currency to locale string
+export const formatCurrency = (amount: number, currency: string = 'RUB'): string => {
+  return new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
+};
+
+// Calculate hourly rates based on daily price
+export const calculateHourlyRate = (dailyPrice: number, hours: number): number => {
+  // For 4 hours, charge 70% of daily rate
+  if (hours <= 4) {
+    return dailyPrice * 0.7;
+  }
+  // For 8 hours, charge 85% of daily rate
+  if (hours <= 8) {
+    return dailyPrice * 0.85;
+  }
+  // Otherwise, charge full daily rate
+  return dailyPrice;
 };

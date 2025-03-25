@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,30 +12,20 @@ import { Product } from '@/types/product';
 interface ProductCardProps {
   product: Product;
   className?: string;
-  onAddToCart?: (productId: string) => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ 
   product, 
-  className,
-  onAddToCart
+  className
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+  const navigate = useNavigate();
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleCalendarClick = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigating to product detail page
     e.stopPropagation(); // Stop event propagation
-    
-    if (onAddToCart && !isAdded) {
-      onAddToCart(product.id);
-      setIsAdded(true);
-      
-      // Reset added state after animation
-      setTimeout(() => {
-        setIsAdded(false);
-      }, 2000);
-    }
+    navigate(`/product/${product.id}`);
   };
 
   return (
@@ -93,24 +83,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 variant="outline" 
                 size="icon" 
                 className="rounded-full bg-background/50 backdrop-blur-xs"
-                onClick={(e) => e.stopPropagation()}
+                onClick={handleCalendarClick}
               >
                 <CalendarIcon className="h-4 w-4" />
-              </Button>
-              
-              <Button 
-                variant="default" 
-                size="icon" 
-                className="rounded-full"
-                disabled={!product.available || isAdded}
-                onClick={handleAddToCart}
-              >
-                <AnimatedTransition show={!isAdded} unmountOnExit={false}>
-                  <PlusIcon className="h-4 w-4" />
-                </AnimatedTransition>
-                <AnimatedTransition show={isAdded} unmountOnExit={false}>
-                  <CheckIcon className="h-4 w-4" />
-                </AnimatedTransition>
               </Button>
             </div>
           </div>
