@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { format, addDays, isSameDay, isAfter, isBefore, addHours, parse } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
 import { 
   Popover, 
   PopoverContent, 
@@ -27,7 +26,7 @@ interface BookingCalendarProps {
   className?: string;
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
 const MIN_RENTAL_HOURS = 4;
 
 export const BookingCalendar: React.FC<BookingCalendarProps> = ({
@@ -180,8 +179,8 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {HOURS.map((hour) => (
-                  <SelectItem key={`start-${hour}`} value={hour.toString()}>
-                    {hour.toString().padStart(2, '0')}:00
+                  <SelectItem key={`start-${hour}`} value={hour}>
+                    {hour}:00
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -213,8 +212,8 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {HOURS.map((hour) => (
-                  <SelectItem key={`end-${hour}`} value={hour.toString()}>
-                    {hour.toString().padStart(2, '0')}:00
+                  <SelectItem key={`end-${hour}`} value={hour}>
+                    {hour}:00
                   </SelectItem>
                 ))}
               </SelectContent>
