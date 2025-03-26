@@ -1,3 +1,4 @@
+
 // Calculate rental price based on number of days
 export const calculateRentalPrice = (
   basePrice: number,
@@ -28,6 +29,9 @@ export const calculateRentalPrice = (
   const pricePerDay = basePrice * (1 - discount);
   return pricePerDay * days;
 };
+
+// Alias for backward compatibility
+export const calculatePrice = calculateRentalPrice;
 
 // Format currency to locale string
 export const formatCurrency = (amount: number, currency: string = 'RUB'): string => {
