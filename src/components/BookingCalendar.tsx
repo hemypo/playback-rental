@@ -29,7 +29,6 @@ interface BookingCalendarProps {
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MIN_RENTAL_HOURS = 4;
-const DATE_FORMAT = 'dd.MM.yyyy';
 
 export const BookingCalendar: React.FC<BookingCalendarProps> = ({
   availabilityPeriods = [],
@@ -38,70 +37,90 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
   className
 }) => {
   const today = new Date();
+  const todayISO = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
   
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [startTime, setStartTime] = useState<string>("10");
   const [endTime, setEndTime] = useState<string>("18");
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [calendarView, setCalendarView] = useState<'start' | 'end'>('start');
   
-  // New state for input values
-  const [startDateInput, setStartDateInput] = useState<string>('');
-  const [endDateInput, setEndDateInput] = useState<string>('');
+  // For HTML date inputs
+  const [startDateISO, setStartDateISO] = useState<string>('');
+  const [endDateISO, setEndDateISO] = useState<string>('');
 
+  // Update ISO dates when Date objects change
   useEffect(() => {
     if (startDate) {
-      setStartDateInput(format(startDate, DATE_FORMAT));
+      setStartDateISO(startDate.toISOString().split('T')[0]);
     }
   }, [startDate]);
 
   useEffect(() => {
     if (endDate) {
-      setEndDateInput(format(endDate, DATE_FORMAT));
+      setEndDateISO(endDate.toISOString().split('T')[0]);
     }
   }, [endDate]);
 
-  const handleSelectDate = (date: Date | undefined) => {
-    if (!date) return;
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setStartDateISO(value);
     
-    if (calendarView === 'start') {
-      // When selecting start date, also reset end date if it's before new start date
-      const newStartDate = setHoursToDate(date, parseInt(startTime));
-      setStartDate(newStartDate);
-      
-      if (endDate && isBefore(endDate, newStartDate)) {
-        // Default to minimum booking period if end date is invalid
-        setEndDate(addHours(newStartDate, MIN_RENTAL_HOURS));
-      } else if (!endDate) {
-        // Default end date to minimum booking period
-        setEndDate(addHours(newStartDate, MIN_RENTAL_HOURS));
-      }
-      
-      // Change to end date selection but keep calendar open
-      setCalendarView('end');
-    } else {
-      if (startDate && !isBefore(date, startDate)) {
-        setEndDate(setHoursToDate(date, parseInt(endTime)));
+    if (value) {
+      try {
+        // Parse the date from ISO format (YYYY-MM-DD)
+        const parsedDate = new Date(value);
+        parsedDate.setHours(parseInt(startTime), 0, 0, 0);
+        
+        if (!isNaN(parsedDate.getTime())) {
+          setStartDate(parsedDate);
+          
+          // Adjust end date if needed
+          if (endDate && isBefore(endDate, addHours(parsedDate, MIN_RENTAL_HOURS))) {
+            const newEndDate = addHours(parsedDate, MIN_RENTAL_HOURS);
+            setEndDate(newEndDate);
+            setEndDateISO(newEndDate.toISOString().split('T')[0]);
+          } else if (!endDate) {
+            const newEndDate = addHours(parsedDate, MIN_RENTAL_HOURS);
+            setEndDate(newEndDate);
+            setEndDateISO(newEndDate.toISOString().split('T')[0]);
+          }
+        }
+      } catch (error) {
+        console.log("Invalid date format", error);
       }
     }
   };
 
-  const setHoursToDate = (date: Date, hours: number): Date => {
-    const newDate = new Date(date);
-    newDate.setHours(hours, 0, 0, 0);
-    return newDate;
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEndDateISO(value);
+    
+    if (value && startDate) {
+      try {
+        // Parse the date from ISO format (YYYY-MM-DD)
+        const parsedDate = new Date(value);
+        parsedDate.setHours(parseInt(endTime), 0, 0, 0);
+        
+        if (!isNaN(parsedDate.getTime()) && !isBefore(parsedDate, startDate)) {
+          setEndDate(parsedDate);
+        }
+      } catch (error) {
+        console.log("Invalid date format", error);
+      }
+    }
   };
 
   const handleStartTimeChange = (value: string) => {
     setStartTime(value);
     if (startDate) {
-      const newStartDate = setHoursToDate(startDate, parseInt(value));
+      const newStartDate = new Date(startDate);
+      newStartDate.setHours(parseInt(value), 0, 0, 0);
       setStartDate(newStartDate);
       
       // Adjust end date if needed
       if (endDate && isBefore(endDate, addHours(newStartDate, MIN_RENTAL_HOURS))) {
-        setEndDate(addHours(newStartDate, MIN_RENTAL_HOURS));
+        const newEndDate = addHours(newStartDate, MIN_RENTAL_HOURS);
+        setEndDate(newEndDate);
       }
     }
   };
@@ -109,7 +128,9 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
   const handleEndTimeChange = (value: string) => {
     setEndTime(value);
     if (endDate) {
-      const newEndDate = setHoursToDate(endDate, parseInt(value));
+      const newEndDate = new Date(endDate);
+      newEndDate.setHours(parseInt(value), 0, 0, 0);
+      
       if (startDate && !isBefore(newEndDate, addHours(startDate, MIN_RENTAL_HOURS))) {
         setEndDate(newEndDate);
       } else if (startDate) {
@@ -119,54 +140,8 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
     }
   };
 
-  // Handle manual input for start date
-  const handleStartDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setStartDateInput(value);
-    
-    try {
-      // Try to parse the entered date
-      const parsedDate = parse(value, DATE_FORMAT, new Date());
-      if (!isNaN(parsedDate.getTime())) {
-        const newStartDate = setHoursToDate(parsedDate, parseInt(startTime));
-        setStartDate(newStartDate);
-        
-        // Adjust end date if needed
-        if (endDate && isBefore(endDate, addHours(newStartDate, MIN_RENTAL_HOURS))) {
-          const newEndDate = addHours(newStartDate, MIN_RENTAL_HOURS);
-          setEndDate(newEndDate);
-          setEndDateInput(format(newEndDate, DATE_FORMAT));
-        } else if (!endDate) {
-          const newEndDate = addHours(newStartDate, MIN_RENTAL_HOURS);
-          setEndDate(newEndDate);
-          setEndDateInput(format(newEndDate, DATE_FORMAT));
-        }
-      }
-    } catch (error) {
-      // Invalid date format, just update the input
-      console.log("Invalid date format", error);
-    }
-  };
-
-  // Handle manual input for end date
-  const handleEndDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEndDateInput(value);
-    
-    try {
-      // Try to parse the entered date
-      const parsedDate = parse(value, DATE_FORMAT, new Date());
-      if (!isNaN(parsedDate.getTime()) && startDate && !isBefore(parsedDate, startDate)) {
-        setEndDate(setHoursToDate(parsedDate, parseInt(endTime)));
-      }
-    } catch (error) {
-      // Invalid date format, just update the input
-      console.log("Invalid date format", error);
-    }
-  };
-
   // Update parent component when booking changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (startDate && endDate && onBookingChange) {
       onBookingChange({ 
         startDate, 
@@ -189,50 +164,15 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
         <div className="space-y-2">
           <label className="text-sm font-medium">Дата и время начала</label>
           <div className="flex gap-2">
-            <Popover 
-              open={calendarOpen && calendarView === 'start'} 
-              onOpenChange={(open) => {
-                if (open) {
-                  setCalendarView('start');
-                }
-                setCalendarOpen(open);
-              }}
-            >
-              <PopoverTrigger asChild>
-                <div className="relative flex-1">
-                  <Input
-                    type="text"
-                    placeholder="дд.мм.гггг"
-                    value={startDateInput}
-                    onChange={handleStartDateInputChange}
-                    className="pr-10"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full aspect-square"
-                  >
-                    <CalendarIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-50" align="start">
-                <div className="p-3 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">Выберите дату начала</h4>
-                  </div>
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={handleSelectDate}
-                    disabled={(date) => isBefore(date, today) && !isSameDay(date, today)}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
+            <div className="relative flex-1">
+              <Input
+                type="date"
+                value={startDateISO}
+                onChange={handleStartDateChange}
+                min={todayISO}
+                className="h-10"
+              />
+            </div>
             
             <Select value={startTime} onValueChange={handleStartTimeChange}>
               <SelectTrigger className="w-[120px]">
@@ -252,59 +192,16 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
         <div className="space-y-2">
           <label className="text-sm font-medium">Дата и время окончания</label>
           <div className="flex gap-2">
-            <Popover 
-              open={calendarOpen && calendarView === 'end'} 
-              onOpenChange={(open) => {
-                if (open) {
-                  setCalendarView('end');
-                }
-                setCalendarOpen(open);
-              }}
-            >
-              <PopoverTrigger asChild>
-                <div className="relative flex-1">
-                  <Input
-                    type="text"
-                    placeholder="дд.мм.гггг"
-                    value={endDateInput}
-                    onChange={handleEndDateInputChange}
-                    className="pr-10"
-                    disabled={!startDate}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full aspect-square"
-                    disabled={!startDate}
-                  >
-                    <CalendarIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-50" align="start">
-                <div className="p-3 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">Выберите дату окончания</h4>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => setCalendarView('start')}
-                    >
-                      Назад
-                    </Button>
-                  </div>
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={handleSelectDate}
-                    disabled={(date) => startDate ? isBefore(date, startDate) : false}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
+            <div className="relative flex-1">
+              <Input
+                type="date"
+                value={endDateISO}
+                onChange={handleEndDateChange}
+                min={startDateISO || todayISO}
+                disabled={!startDate}
+                className="h-10"
+              />
+            </div>
             
             <Select 
               value={endTime} 
