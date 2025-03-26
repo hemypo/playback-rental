@@ -78,10 +78,12 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
             const newEndDate = addHours(parsedDate, MIN_RENTAL_HOURS);
             setEndDate(newEndDate);
             setEndDateISO(newEndDate.toISOString().split('T')[0]);
+            setEndTime(startTime); // Update end time to match start time
           } else if (!endDate) {
             const newEndDate = addHours(parsedDate, MIN_RENTAL_HOURS);
             setEndDate(newEndDate);
             setEndDateISO(newEndDate.toISOString().split('T')[0]);
+            setEndTime(startTime); // Set initial end time based on start time
           }
         }
       } catch (error) {
@@ -120,7 +122,16 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
       if (endDate && isBefore(endDate, addHours(newStartDate, MIN_RENTAL_HOURS))) {
         const newEndDate = addHours(newStartDate, MIN_RENTAL_HOURS);
         setEndDate(newEndDate);
+        
+        // Also update end time if it's the same day
+        if (isSameDay(newStartDate, newEndDate)) {
+          const newEndHour = (parseInt(value) + MIN_RENTAL_HOURS) % 24;
+          setEndTime(newEndHour.toString().padStart(2, '0'));
+        }
       }
+      
+      // Trigger the onChange callback
+      updateBookingCallback();
     }
   };
 
@@ -132,19 +143,30 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
       
       if (startDate && !isBefore(newEndDate, addHours(startDate, MIN_RENTAL_HOURS))) {
         setEndDate(newEndDate);
+        updateBookingCallback();
       } else if (startDate) {
         // If invalid end time, set to minimum booking period
-        setEndDate(addHours(startDate, MIN_RENTAL_HOURS));
+        const minEndDate = addHours(startDate, MIN_RENTAL_HOURS);
+        setEndDate(minEndDate);
+        setEndTime(minEndDate.getHours().toString().padStart(2, '0'));
+        updateBookingCallback();
       }
     }
   };
 
-  // Update parent component when booking changes
-  useEffect(() => {
+  // Helper function to update parent component
+  const updateBookingCallback = () => {
     if (startDate && endDate && onBookingChange) {
+      // Make sure both dates have correct time set
+      const updatedStartDate = new Date(startDate);
+      updatedStartDate.setHours(parseInt(startTime), 0, 0, 0);
+      
+      const updatedEndDate = new Date(endDate);
+      updatedEndDate.setHours(parseInt(endTime), 0, 0, 0);
+      
       onBookingChange({ 
-        startDate, 
-        endDate, 
+        startDate: updatedStartDate, 
+        endDate: updatedEndDate, 
         id: '',
         productId: '',
         customerName: '',
@@ -155,7 +177,12 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
         createdAt: new Date()
       });
     }
-  }, [startDate, endDate, onBookingChange]);
+  };
+
+  // Update parent component when booking changes
+  useEffect(() => {
+    updateBookingCallback();
+  }, [startDate, endDate, startTime, endTime]);
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -177,7 +204,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
               <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="Время" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-50 bg-white">
                 {HOURS.map((hour) => (
                   <SelectItem key={`start-${hour}`} value={hour}>
                     {hour}:00
@@ -210,7 +237,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
               <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="Время" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-50 bg-white">
                 {HOURS.map((hour) => (
                   <SelectItem key={`end-${hour}`} value={hour}>
                     {hour}:00
