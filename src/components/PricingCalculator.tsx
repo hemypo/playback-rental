@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { differenceInHours, differenceInDays } from 'date-fns';
-import { calculateRentalPrice } from '@/utils/pricingUtils';
+import { differenceInHours } from 'date-fns';
+import { calculateRentalDetails } from '@/utils/pricingUtils';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import AnimatedTransition from './AnimatedTransition';
@@ -38,11 +38,13 @@ export const PricingCalculator: React.FC<PricingCalculatorProps> = ({
   });
 
   useEffect(() => {
-    if (startDate && endDate) {
+    if (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
       const hours = differenceInHours(endDate, startDate);
+      if (hours <= 0) return; // Avoid negative or zero hours
+      
       const days = Math.ceil(hours / 24);
       
-      const { total, subtotal, discount, hourlyRate, dayDiscount } = calculateRentalPrice(basePrice, hours);
+      const { total, subtotal, discount, hourlyRate, dayDiscount } = calculateRentalDetails(basePrice, hours);
       
       setPricing({
         hours,
