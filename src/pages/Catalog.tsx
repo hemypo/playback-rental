@@ -23,6 +23,9 @@ import ProductCard from '@/components/ProductCard';
 import { BookingCalendar } from '@/components/BookingCalendar';
 import AnimatedTransition from '@/components/AnimatedTransition';
 import * as supabaseService from '@/services/supabaseService';
+import { BookingPeriod } from '@/types/product';
+import { toast } from '@/hooks/use-toast';
+import { formatDateRange } from '@/utils/dateUtils';
 
 const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,6 +35,7 @@ const Catalog = () => {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [dateFilterActive, setDateFilterActive] = useState(false);
   
   // Get categories
   const { data: categories } = useQuery({
@@ -41,14 +45,14 @@ const Catalog = () => {
   
   // Get products with filters
   const { data: products, isLoading } = useQuery({
-    queryKey: ['products', search, category, startDate, endDate],
+    queryKey: ['products', search, category, startDate?.toISOString(), endDate?.toISOString()],
     queryFn: async () => {
       if (startDate && endDate) {
         // If dates are selected, get available products for that period
         return supabaseService.getAvailableProducts(startDate, endDate);
       } else {
         // Otherwise, get all products with category/search filters
-        return supabaseService.getProducts({ category, search });
+        return supabaseService.getProducts();
       }
     },
   });
@@ -64,7 +68,12 @@ const Catalog = () => {
     const filters = [];
     if (search) filters.push(`Search: ${search}`);
     if (category) filters.push(`Category: ${category}`);
-    if (startDate && endDate) filters.push('Date range selected');
+    if (startDate && endDate) {
+      filters.push(`Период: ${formatDateRange(startDate, endDate)}`);
+      setDateFilterActive(true);
+    } else {
+      setDateFilterActive(false);
+    }
     setActiveFilters(filters);
   }, [search, category, startDate, endDate, setSearchParams]);
   
@@ -76,13 +85,19 @@ const Catalog = () => {
   };
   
   const handleCategoryChange = (value: string) => {
-    setCategory(value);
+    setCategory(value === 'all' ? '' : value);
     setFiltersOpen(false);
   };
   
-  const handleDateChange = (booking: { startDate: Date; endDate: Date }) => {
+  const handleDateChange = (booking: BookingPeriod) => {
     setStartDate(booking.startDate);
     setEndDate(booking.endDate);
+    setFiltersOpen(false);
+    
+    toast({
+      title: "Период аренды выбран",
+      description: `${formatDateRange(booking.startDate, booking.endDate)}`,
+    });
   };
   
   const clearFilters = () => {
@@ -91,11 +106,6 @@ const Catalog = () => {
     setStartDate(undefined);
     setEndDate(undefined);
     setSearchParams({});
-  };
-  
-  const handleAddToCart = (productId: string) => {
-    console.log('Add to cart:', productId);
-    // This would add the item to the cart
   };
   
   return (
@@ -130,7 +140,7 @@ const Catalog = () => {
                 <div className="py-6 space-y-8">
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Категории</h3>
-                    <Select value={category} onValueChange={handleCategoryChange}>
+                    <Select value={category || 'all'} onValueChange={handleCategoryChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Categories" />
                       </SelectTrigger>
@@ -188,6 +198,15 @@ const Catalog = () => {
           </div>
         )}
         
+        {/* Date selection info */}
+        {dateFilterActive && (
+          <div className="mb-8 p-4 bg-secondary/20 rounded-lg">
+            <p className="text-sm">
+              Showing equipment available from <span className="font-medium">{startDate?.toLocaleDateString()}, {startDate?.getHours()}:00</span> to <span className="font-medium">{endDate?.toLocaleDateString()}, {endDate?.getHours()}:00</span>
+            </p>
+          </div>
+        )}
+        
         {/* Products grid */}
         <AnimatedTransition show={true} type="fade">
           {isLoading ? (
@@ -210,8 +229,9 @@ const Catalog = () => {
               {products?.map((product) => (
                 <ProductCard 
                   key={product.id} 
-                  product={product} 
-                  onAddToCart={handleAddToCart}
+                  product={product}
+                  selectedStartDate={startDate}
+                  selectedEndDate={endDate}
                 />
               ))}
             </div>

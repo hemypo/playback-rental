@@ -1,4 +1,3 @@
-
 import { addDays, addHours, format, isSameDay, isWithinInterval } from 'date-fns';
 
 export interface DateRange {
@@ -11,9 +10,9 @@ export interface DateRange {
  */
 export const formatDateRange = (start: Date, end: Date): string => {
   if (isSameDay(start, end)) {
-    return `${format(start, 'MMM d, yyyy')} ${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`;
+    return `${format(start, 'dd.MM.yyyy')} ${format(start, 'HH:00')} - ${format(end, 'HH:00')}`;
   }
-  return `${format(start, 'MMM d, yyyy HH:mm')} - ${format(end, 'MMM d, yyyy HH:mm')}`;
+  return `${format(start, 'dd.MM.yyyy HH:00')} - ${format(end, 'dd.MM.yyyy HH:00')}`;
 };
 
 /**

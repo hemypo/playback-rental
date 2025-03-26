@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Product, BookingPeriod, Category, BookingFormData } from "@/types/product";
 
@@ -266,6 +265,33 @@ export const updateBookingStatus = async (id: string, status: BookingPeriod['sta
   }
   
   return mapBookingData(data);
+};
+
+// Add this new function for available products by date range
+export const getAvailableProducts = async (startDate: Date, endDate: Date): Promise<Product[]> => {
+  // First, get all products
+  const products = await getProducts();
+  
+  // Then, get all bookings that overlap with the requested period
+  const { data: bookings, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .or(`start_date.lte.${endDate.toISOString()},end_date.gte.${startDate.toISOString()}`);
+  
+  if (error) {
+    console.error('Error fetching overlapping bookings:', error);
+    throw new Error(error.message);
+  }
+  
+  // Extract product IDs that are unavailable during this period
+  const unavailableProductIds = new Set(
+    bookings?.map(booking => booking.productId) || []
+  );
+  
+  // Filter out unavailable products
+  return products.filter(product => 
+    product.available && !unavailableProductIds.has(product.id)
+  );
 };
 
 // File exports/imports

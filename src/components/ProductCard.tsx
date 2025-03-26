@@ -8,24 +8,45 @@ import { Button } from '@/components/ui/button';
 import { CalendarIcon, PlusIcon, CheckIcon } from 'lucide-react';
 import AnimatedTransition from './AnimatedTransition';
 import { Product } from '@/types/product';
+import { useCartContext } from '@/hooks/useCart';
 
 interface ProductCardProps {
   product: Product;
   className?: string;
+  selectedStartDate?: Date;
+  selectedEndDate?: Date;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ 
   product, 
-  className
+  className,
+  selectedStartDate,
+  selectedEndDate
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
   const navigate = useNavigate();
+  const { addToCart } = useCartContext();
 
   const handleCalendarClick = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigating to product detail page
     e.stopPropagation(); // Stop event propagation
     navigate(`/product/${product.id}`);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (selectedStartDate && selectedEndDate) {
+      const success = addToCart(product, selectedStartDate, selectedEndDate);
+      if (success) {
+        setIsAdded(true);
+        setTimeout(() => setIsAdded(false), 2000);
+      }
+    } else {
+      navigate(`/product/${product.id}`);
+    }
   };
 
   return (
@@ -87,6 +108,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
               >
                 <CalendarIcon className="h-4 w-4" />
               </Button>
+              
+              {selectedStartDate && selectedEndDate && (
+                <Button
+                  variant={isAdded ? "secondary" : "default"}
+                  size="sm"
+                  className="rounded-full"
+                  onClick={handleAddToCart}
+                >
+                  {isAdded ? (
+                    <><CheckIcon className="h-4 w-4 mr-1" /> Добавлено</>
+                  ) : (
+                    <><PlusIcon className="h-4 w-4 mr-1" /> В корзину</>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </div>
