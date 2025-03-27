@@ -122,7 +122,8 @@ export const getBookings = async () => {
         startDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
         totalPrice: 5400,
-        status: 'confirmed'
+        status: 'confirmed',
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
       },
       {
         id: '2',
@@ -133,7 +134,8 @@ export const getBookings = async () => {
         startDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
         endDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
         totalPrice: 3600,
-        status: 'pending'
+        status: 'pending',
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
       },
       {
         id: '3',
@@ -144,7 +146,8 @@ export const getBookings = async () => {
         startDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
         endDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
         totalPrice: 2800,
-        status: 'completed'
+        status: 'completed',
+        createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
       },
       {
         id: '4',
@@ -155,7 +158,8 @@ export const getBookings = async () => {
         startDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
         endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
         totalPrice: 12500,
-        status: 'confirmed'
+        status: 'confirmed',
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
       },
       {
         id: '5',
@@ -166,7 +170,8 @@ export const getBookings = async () => {
         startDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
         endDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
         totalPrice: 4200,
-        status: 'cancelled'
+        status: 'cancelled',
+        createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000)
       }
     ];
   } catch (error) {
@@ -192,7 +197,8 @@ export const createBooking = async (bookingData: any) => {
     return {
       id: Math.random().toString(36).substring(2, 9),
       ...bookingData,
-      status: 'pending'
+      status: 'pending',
+      createdAt: new Date()
     };
   } catch (error) {
     console.error('Error creating booking:', error);
