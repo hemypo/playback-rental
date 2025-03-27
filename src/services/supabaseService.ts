@@ -1,8 +1,9 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { isDateRangeAvailable } from '@/utils/dateUtils';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://xwylatyyhqyfwsxfwzmn.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3eWxhdHl5aHF5ZndzeGZ3em1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI3MDAzMjAsImV4cCI6MjA1ODI3NjMyMH0.csLalsyRWr3iky23InlhaJwU2GIm5ckrW3umInkd9C4';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -35,6 +36,48 @@ export const getProductById = async (id: string) => {
 };
 
 /**
+ * Create a new product
+ */
+export const createProduct = async (product: any) => {
+  try {
+    const { data, error } = await supabase.from('products').insert([product]).select().single();
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error creating product:', error);
+    return null;
+  }
+};
+
+/**
+ * Update a product
+ */
+export const updateProduct = async (id: string, updates: any) => {
+  try {
+    const { data, error } = await supabase.from('products').update(updates).eq('id', id).select().single();
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating product:', error);
+    return null;
+  }
+};
+
+/**
+ * Delete a product
+ */
+export const deleteProduct = async (id: string) => {
+  try {
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    return false;
+  }
+};
+
+/**
  * Get all categories
  */
 export const getCategories = async () => {
@@ -49,11 +92,25 @@ export const getCategories = async () => {
 };
 
 /**
+ * Add a category
+ */
+export const addCategory = async (categoryName: string) => {
+  try {
+    const { data, error } = await supabase.from('categories').insert([{ name: categoryName }]).select().single();
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error adding category:', error);
+    return null;
+  }
+};
+
+/**
  * Create a new booking
  */
 export const createBooking = async (bookingData: any) => {
   try {
-    const { data, error } = await supabase.from('bookings').insert([bookingData]);
+    const { data, error } = await supabase.from('bookings').insert([bookingData]).select().single();
     if (error) throw error;
     return data;
   } catch (error) {
@@ -67,7 +124,7 @@ export const createBooking = async (bookingData: any) => {
  */
 export const updateBooking = async (id: string, updates: any) => {
   try {
-    const { data, error } = await supabase.from('bookings').update(updates).eq('id', id);
+    const { data, error } = await supabase.from('bookings').update(updates).eq('id', id).select().single();
     if (error) throw error;
     return data;
   } catch (error) {
@@ -77,16 +134,30 @@ export const updateBooking = async (id: string, updates: any) => {
 };
 
 /**
+ * Update booking status
+ */
+export const updateBookingStatus = async (id: string, status: string) => {
+  try {
+    const { data, error } = await supabase.from('bookings').update({ status }).eq('id', id).select().single();
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating booking status:', error);
+    return null;
+  }
+};
+
+/**
  * Delete a booking
  */
 export const deleteBooking = async (id: string) => {
   try {
-    const { data, error } = await supabase.from('bookings').delete().eq('id', id);
+    const { error } = await supabase.from('bookings').delete().eq('id', id);
     if (error) throw error;
-    return data;
+    return true;
   } catch (error) {
     console.error('Error deleting booking:', error);
-    return null;
+    return false;
   }
 };
 
@@ -131,6 +202,38 @@ export const getAvailableProducts = async (startDate: Date, endDate: Date) => {
 };
 
 /**
+ * Get all bookings for a specific product
+ */
+export const getProductBookings = async (productId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('product_id', productId);
+    
+    if (error) throw error;
+    
+    // Transform booking data
+    return data.map(booking => ({
+      id: booking.id,
+      productId: booking.product_id,
+      startDate: new Date(booking.start_date),
+      endDate: new Date(booking.end_date),
+      customerName: booking.customer_name,
+      customerEmail: booking.customer_email,
+      customerPhone: booking.customer_phone,
+      status: booking.status,
+      totalPrice: booking.total_price,
+      notes: booking.notes,
+      createdAt: new Date(booking.created_at)
+    }));
+  } catch (error) {
+    console.error('Error getting product bookings:', error);
+    return [];
+  }
+};
+
+/**
  * Get all bookings
  */
 export const getBookings = async () => {
@@ -169,4 +272,123 @@ export const getBookings = async () => {
     console.error('Error getting bookings:', error);
     return [];
   }
+};
+
+/**
+ * Export products to CSV
+ */
+export const exportProductsToCSV = async () => {
+  try {
+    const products = await getProducts();
+    
+    // Convert products to CSV format
+    const headers = ['id', 'title', 'description', 'price', 'category', 'imageurl', 'quantity', 'available'];
+    const csvRows = [
+      headers.join(','),
+      ...products.map(product => 
+        headers.map(header => {
+          // Handle special cases like boolean or comma in text
+          const value = product[header as keyof typeof product];
+          if (typeof value === 'string' && value.includes(',')) {
+            return `"${value}"`;
+          }
+          return value;
+        }).join(',')
+      )
+    ];
+    
+    return csvRows.join('\n');
+  } catch (error) {
+    console.error('Error exporting products to CSV:', error);
+    return '';
+  }
+};
+
+/**
+ * Import products from CSV
+ */
+export const importProductsFromCSV = async (csvContent: string) => {
+  try {
+    const lines = csvContent.split('\n');
+    const headers = lines[0].split(',');
+    
+    const products = [];
+    
+    // Skip header line and process each row
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      
+      const values = lines[i].split(',');
+      const product: Record<string, any> = {};
+      
+      headers.forEach((header, index) => {
+        let value = values[index];
+        
+        // Handle quoted values with commas
+        if (value && value.startsWith('"') && !value.endsWith('"')) {
+          let j = index + 1;
+          while (j < values.length) {
+            value += ',' + values[j];
+            if (values[j].endsWith('"')) break;
+            j++;
+          }
+          // Remove quotes
+          value = value.substring(1, value.length - 1);
+        }
+        
+        // Convert to appropriate types
+        if (header === 'available') {
+          product[header] = value.toLowerCase() === 'true';
+        } else if (header === 'price' || header === 'quantity') {
+          product[header] = Number(value);
+        } else {
+          product[header] = value;
+        }
+      });
+      
+      products.push(product);
+    }
+    
+    // Insert products into database
+    for (const product of products) {
+      // Skip id when inserting
+      const { id, ...productData } = product;
+      await supabase.from('products').insert([productData]);
+    }
+    
+    return products;
+  } catch (error) {
+    console.error('Error importing products from CSV:', error);
+    return [];
+  }
+};
+
+/**
+ * Mock authentication functions for demo
+ */
+export const login = async (username: string, password: string) => {
+  // Demo authentication logic
+  if (username === 'admin' && password === 'admin123') {
+    localStorage.setItem('auth_token', 'demo_token');
+    localStorage.setItem('user', JSON.stringify({ username: 'admin', role: 'admin' }));
+    return { success: true, token: 'demo_token' };
+  }
+  return { success: false };
+};
+
+export const logout = () => {
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('user');
+};
+
+export const checkAuth = () => {
+  return !!localStorage.getItem('auth_token');
+};
+
+export const getCurrentUser = () => {
+  const userString = localStorage.getItem('user');
+  if (userString) {
+    return JSON.parse(userString);
+  }
+  return null;
 };
