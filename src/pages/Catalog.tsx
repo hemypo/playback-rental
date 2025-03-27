@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { SearchIcon, SlidersIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,10 +15,24 @@ import { toast } from '@/hooks/use-toast';
 
 const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [category, setCategory] = useState(searchParams.get('category') || '');
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  
+  // Parse dates from URL parameters or location state
+  const initialStartDateStr = searchParams.get('startDate') || '';
+  const initialEndDateStr = searchParams.get('endDate') || '';
+  const locationState = location.state as { startDate?: Date; endDate?: Date } | null;
+  
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    initialStartDateStr ? new Date(initialStartDateStr) : 
+    locationState?.startDate || undefined
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    initialEndDateStr ? new Date(initialEndDateStr) : 
+    locationState?.endDate || undefined
+  );
+  
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [dateFilterActive, setDateFilterActive] = useState(false);
   
@@ -47,6 +61,8 @@ const Catalog = () => {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
     if (category) params.set('category', category);
+    if (startDate) params.set('startDate', startDate.toISOString());
+    if (endDate) params.set('endDate', endDate.toISOString());
     setSearchParams(params, { replace: true });
     
     // Calculate active filters for display

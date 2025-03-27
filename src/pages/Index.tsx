@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRightIcon, CameraIcon, MusicIcon, MonitorIcon, PackageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { BookingCalendar } from '@/components/BookingCalendar';
 import { getProducts, getCategories } from '@/services/apiService';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [bookingPeriod, setBookingPeriod] = useState<{ startDate?: Date; endDate?: Date }>({});
 
   const { data: featuredProducts, isLoading: productsLoading } = useQuery({
@@ -28,7 +28,12 @@ const Index = () => {
 
   const handleSearchClick = () => {
     if (bookingPeriod.startDate && bookingPeriod.endDate) {
-      window.location.href = '/catalog';
+      navigate('/catalog', { 
+        state: { 
+          startDate: bookingPeriod.startDate, 
+          endDate: bookingPeriod.endDate 
+        } 
+      });
     }
   };
 

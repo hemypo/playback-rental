@@ -1,6 +1,5 @@
-
-import { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
   ArrowLeftIcon, 
@@ -32,11 +31,18 @@ import { useCartContext } from '@/hooks/useCart';
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [bookingDates, setBookingDates] = useState<{startDate?: Date, endDate?: Date}>({});
+  const location = useLocation();
+  
+  const locationState = location.state as { startDate?: Date; endDate?: Date } | null;
+  
+  const [bookingDates, setBookingDates] = useState<{startDate?: Date, endDate?: Date}>({
+    startDate: locationState?.startDate,
+    endDate: locationState?.endDate
+  });
+  
   const [addingToCart, setAddingToCart] = useState(false);
   const { addToCart } = useCartContext();
 
-  // Fetch product details
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
     queryFn: () => getProductById(id || ''),
@@ -45,7 +51,6 @@ const ProductDetail = () => {
     }
   });
 
-  // Fetch product bookings
   const { data: bookings } = useQuery({
     queryKey: ['bookings', id],
     queryFn: () => getProductBookings(id || ''),
@@ -120,7 +125,6 @@ const ProductDetail = () => {
         </Breadcrumb>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Product Image */}
           <AnimatedTransition show={true} type="fade" className="relative aspect-[4/3] rounded-xl overflow-hidden subtle-ring">
             <div 
               className="absolute inset-0 bg-cover bg-center"
@@ -141,7 +145,6 @@ const ProductDetail = () => {
             )}
           </AnimatedTransition>
 
-          {/* Product Details & Booking */}
           <div className="space-y-6">
             <div>
               <Badge variant="outline" className="mb-3">
@@ -164,6 +167,8 @@ const ProductDetail = () => {
               <BookingCalendar
                 onBookingChange={handleBookingChange}
                 bookedPeriods={bookings}
+                initialStartDate={bookingDates.startDate}
+                initialEndDate={bookingDates.endDate}
               />
 
               {bookingDates.startDate && bookingDates.endDate && (

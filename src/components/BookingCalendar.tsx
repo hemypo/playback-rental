@@ -1,262 +1,191 @@
 
-import React, { useState, useEffect } from 'react';
-import { format, addDays, isSameDay, isAfter, isBefore, addHours, parse } from 'date-fns';
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from '@/components/ui/popover';
+import { useState, useEffect } from 'react';
+import { addDays } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import { CalendarIcon, ClockIcon } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getBusinessHoursOptions } from '@/utils/dateUtils';
 import { BookingPeriod } from '@/types/product';
+import { toast } from '@/hooks/use-toast';
 
 interface BookingCalendarProps {
-  availabilityPeriods?: BookingPeriod[];
+  onBookingChange: (bookingPeriod: BookingPeriod) => void;
   bookedPeriods?: BookingPeriod[];
-  onBookingChange?: (booking: BookingPeriod) => void;
-  className?: string;
+  initialStartDate?: Date;
+  initialEndDate?: Date;
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-const MIN_RENTAL_HOURS = 4;
-
-export const BookingCalendar: React.FC<BookingCalendarProps> = ({
-  availabilityPeriods = [],
+export const BookingCalendar = ({ 
+  onBookingChange, 
   bookedPeriods = [],
-  onBookingChange,
-  className
-}) => {
-  const today = new Date();
-  const todayISO = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  initialStartDate,
+  initialEndDate
+}: BookingCalendarProps) => {
+  const [date, setDate] = useState<Date | undefined>(initialStartDate || undefined);
+  const [startTime, setStartTime] = useState<string | undefined>(
+    initialStartDate ? initialStartDate.getHours().toString() : undefined
+  );
+  const [endTime, setEndTime] = useState<string | undefined>(
+    initialEndDate ? initialEndDate.getHours().toString() : undefined
+  );
   
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [startTime, setStartTime] = useState<string>("10");
-  const [endTime, setEndTime] = useState<string>("18");
+  // Business hours for time selection
+  const businessHours = { open: 8, close: 22 };
+  const hourOptions = getBusinessHoursOptions(businessHours);
   
-  // For HTML date inputs
-  const [startDateISO, setStartDateISO] = useState<string>('');
-  const [endDateISO, setEndDateISO] = useState<string>('');
-
-  // Update ISO dates when Date objects change
-  useEffect(() => {
-    if (startDate) {
-      setStartDateISO(startDate.toISOString().split('T')[0]);
-    }
-  }, [startDate]);
-
-  useEffect(() => {
-    if (endDate) {
-      setEndDateISO(endDate.toISOString().split('T')[0]);
-    }
-  }, [endDate]);
-
-  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setStartDateISO(value);
+  // Handle date selection
+  const handleDateSelect = (selected: Date | undefined) => {
+    setDate(selected);
     
-    if (value) {
-      try {
-        // Parse the date from ISO format (YYYY-MM-DD)
-        const parsedDate = new Date(value);
-        parsedDate.setHours(parseInt(startTime), 0, 0, 0);
-        
-        if (!isNaN(parsedDate.getTime())) {
-          setStartDate(parsedDate);
-          
-          // Adjust end date if needed
-          if (endDate && isBefore(endDate, addHours(parsedDate, MIN_RENTAL_HOURS))) {
-            const newEndDate = addHours(parsedDate, MIN_RENTAL_HOURS);
-            setEndDate(newEndDate);
-            setEndDateISO(newEndDate.toISOString().split('T')[0]);
-            setEndTime(startTime); // Update end time to match start time
-          } else if (!endDate) {
-            const newEndDate = addHours(parsedDate, MIN_RENTAL_HOURS);
-            setEndDate(newEndDate);
-            setEndDateISO(newEndDate.toISOString().split('T')[0]);
-            setEndTime(startTime); // Set initial end time based on start time
-          }
-        }
-      } catch (error) {
-        console.log("Invalid date format", error);
-      }
+    // Reset times if date is cleared
+    if (!selected) {
+      setStartTime(undefined);
+      setEndTime(undefined);
+      return;
+    }
+    
+    // Set default start and end times
+    if (!startTime) {
+      setStartTime(businessHours.open.toString());
+    }
+    
+    if (!endTime) {
+      // Default to 4 hour rental
+      const defaultEndHour = Math.min(businessHours.open + 4, businessHours.close);
+      setEndTime(defaultEndHour.toString());
     }
   };
-
-  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEndDateISO(value);
-    
-    if (value && startDate) {
-      try {
-        // Parse the date from ISO format (YYYY-MM-DD)
-        const parsedDate = new Date(value);
-        parsedDate.setHours(parseInt(endTime), 0, 0, 0);
-        
-        if (!isNaN(parsedDate.getTime()) && !isBefore(parsedDate, startDate)) {
-          setEndDate(parsedDate);
-        }
-      } catch (error) {
-        console.log("Invalid date format", error);
-      }
-    }
-  };
-
+  
+  // Handle time selection
   const handleStartTimeChange = (value: string) => {
     setStartTime(value);
-    if (startDate) {
-      const newStartDate = new Date(startDate);
-      newStartDate.setHours(parseInt(value), 0, 0, 0);
-      setStartDate(newStartDate);
-      
-      // Adjust end date if needed
-      if (endDate && isBefore(endDate, addHours(newStartDate, MIN_RENTAL_HOURS))) {
-        const newEndDate = addHours(newStartDate, MIN_RENTAL_HOURS);
-        setEndDate(newEndDate);
-        
-        // Also update end time if it's the same day
-        if (isSameDay(newStartDate, newEndDate)) {
-          const newEndHour = (parseInt(value) + MIN_RENTAL_HOURS) % 24;
-          setEndTime(newEndHour.toString().padStart(2, '0'));
-        }
-      }
-      
-      // Trigger the onChange callback
-      updateBookingCallback();
+    
+    // If end time is earlier than start time, adjust it
+    if (endTime && parseInt(value) >= parseInt(endTime)) {
+      const newEndHour = Math.min(parseInt(value) + 4, businessHours.close);
+      setEndTime(newEndHour.toString());
     }
   };
-
+  
   const handleEndTimeChange = (value: string) => {
     setEndTime(value);
-    if (endDate) {
-      const newEndDate = new Date(endDate);
-      newEndDate.setHours(parseInt(value), 0, 0, 0);
-      
-      if (startDate && !isBefore(newEndDate, addHours(startDate, MIN_RENTAL_HOURS))) {
-        setEndDate(newEndDate);
-        updateBookingCallback();
-      } else if (startDate) {
-        // If invalid end time, set to minimum booking period
-        const minEndDate = addHours(startDate, MIN_RENTAL_HOURS);
-        setEndDate(minEndDate);
-        setEndTime(minEndDate.getHours().toString().padStart(2, '0'));
-        updateBookingCallback();
-      }
-    }
   };
-
-  // Helper function to update parent component
-  const updateBookingCallback = () => {
-    if (startDate && endDate && onBookingChange) {
-      // Make sure both dates have correct time set
-      const updatedStartDate = new Date(startDate);
-      updatedStartDate.setHours(parseInt(startTime), 0, 0, 0);
-      
-      const updatedEndDate = new Date(endDate);
-      updatedEndDate.setHours(parseInt(endTime), 0, 0, 0);
-      
-      onBookingChange({ 
-        startDate: updatedStartDate, 
-        endDate: updatedEndDate, 
-        id: '',
-        productId: '',
-        customerName: '',
-        customerEmail: '',
-        customerPhone: '',
-        status: 'pending',
-        totalPrice: 0,
-        createdAt: new Date()
-      });
-    }
-  };
-
+  
   // Update parent component when booking changes
   useEffect(() => {
-    updateBookingCallback();
-  }, [startDate, endDate, startTime, endTime]);
-
+    if (date && startTime && endTime) {
+      const startHour = parseInt(startTime);
+      const endHour = parseInt(endTime);
+      
+      if (startHour >= endHour) {
+        toast({
+          variant: "destructive",
+          title: "Ошибка выбора времени",
+          description: "Время окончания должно быть позже времени начала",
+        });
+        return;
+      }
+      
+      const start = new Date(date);
+      start.setHours(startHour, 0, 0, 0);
+      
+      const end = new Date(date);
+      end.setHours(endHour, 0, 0, 0);
+      
+      onBookingChange({ startDate: start, endDate: end });
+    }
+  }, [date, startTime, endTime, onBookingChange]);
+  
+  // Initialize with passed values
+  useEffect(() => {
+    if (initialStartDate && initialEndDate) {
+      setDate(new Date(initialStartDate));
+      setStartTime(initialStartDate.getHours().toString());
+      setEndTime(initialEndDate.getHours().toString());
+    }
+  }, [initialStartDate, initialEndDate]);
+  
   return (
-    <div className={cn("space-y-4", className)}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Дата и время начала</label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Input
-                type="date"
-                value={startDateISO}
-                onChange={handleStartDateChange}
-                min={todayISO}
-                className="h-10"
+    <div className="space-y-4 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Date selector */}
+        <div className="md:col-span-1">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                className={`w-full justify-start text-left ${!date && 'text-muted-foreground'}`}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? date.toLocaleDateString() : "Выберите дату"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={handleDateSelect}
+                disabled={(date) => date < new Date()}
+                initialFocus
+                className="rounded-md border bg-white pointer-events-auto"
               />
-            </div>
-            
-            <Select value={startTime} onValueChange={handleStartTimeChange}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Время" />
+            </PopoverContent>
+          </Popover>
+        </div>
+        
+        {/* Time selectors */}
+        <div className="md:col-span-2 grid grid-cols-2 gap-4">
+          <div>
+            <Select 
+              value={startTime} 
+              onValueChange={handleStartTimeChange}
+              disabled={!date}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Начало" />
               </SelectTrigger>
-              <SelectContent className="z-50 bg-white">
-                {HOURS.map((hour) => (
-                  <SelectItem key={`start-${hour}`} value={hour}>
-                    {hour}:00
+              <SelectContent className="pointer-events-auto">
+                {hourOptions.map((option) => (
+                  <SelectItem key={`start-${option.value}`} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-        </div>
-        
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Дата и время окончания</label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Input
-                type="date"
-                value={endDateISO}
-                onChange={handleEndDateChange}
-                min={startDateISO || todayISO}
-                disabled={!startDate}
-                className="h-10"
-              />
-            </div>
-            
+          
+          <div>
             <Select 
               value={endTime} 
               onValueChange={handleEndTimeChange}
-              disabled={!startDate}
+              disabled={!startTime}
             >
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Время" />
+              <SelectTrigger>
+                <SelectValue placeholder="Окончание" />
               </SelectTrigger>
-              <SelectContent className="z-50 bg-white">
-                {HOURS.map((hour) => (
-                  <SelectItem key={`end-${hour}`} value={hour}>
-                    {hour}:00
-                  </SelectItem>
-                ))}
+              <SelectContent className="pointer-events-auto">
+                {hourOptions
+                  .filter(option => !startTime || parseInt(option.value) > parseInt(startTime))
+                  .map((option) => (
+                    <SelectItem key={`end-${option.value}`} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))
+                }
               </SelectContent>
             </Select>
           </div>
         </div>
       </div>
       
-      {startDate && endDate && (
-        <div className="bg-secondary p-4 rounded-lg">
-          <div className="flex items-center gap-2 text-sm">
-            <ClockIcon className="h-4 w-4 text-muted-foreground" />
-            <span>
-              Период аренды: <span className="font-medium">{format(startDate, "dd.MM, HH:mm")} - {format(endDate, "dd.MM, HH:mm")}</span>
-            </span>
-          </div>
+      {/* Selected booking info */}
+      {date && startTime && endTime && (
+        <div className="text-sm p-3 bg-secondary/20 rounded-md">
+          <p>
+            Выбрано: <span className="font-medium">{date.toLocaleDateString()}, {startTime}:00 - {endTime}:00</span>
+          </p>
         </div>
       )}
     </div>
