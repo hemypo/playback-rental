@@ -1,5 +1,6 @@
 
-import { Link, useLocation, useNavigate, useEffect } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AlertTriangleIcon, ArrowLeftIcon, HomeIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
