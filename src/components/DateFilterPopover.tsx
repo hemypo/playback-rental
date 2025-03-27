@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { formatDateRange } from '@/utils/dateUtils';
-import { BookingCalendar } from '@/components/BookingCalendar';
+import BookingCalendar from '@/components/BookingCalendar';
 import { BookingPeriod } from '@/types/product';
 
 interface DateFilterPopoverProps {

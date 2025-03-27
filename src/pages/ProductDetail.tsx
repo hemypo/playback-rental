@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -21,7 +22,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AnimatedTransition from '@/components/AnimatedTransition';
-import { BookingCalendar } from '@/components/BookingCalendar';
+import BookingCalendar from '@/components/BookingCalendar';
 import PricingCalculator from '@/components/PricingCalculator';
 import { getProductById, getProductBookings } from '@/services/apiService';
 import { formatDateRange } from '@/utils/dateUtils';

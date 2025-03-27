@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -6,17 +7,20 @@ import { Button } from '@/components/ui/button';
 import { BookingPeriod } from '@/types/product';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
+import { DateRange } from '@/utils/dateUtils';
 
 interface BookingCalendarProps {
   onBookingChange: (booking: BookingPeriod) => void;
   initialStartDate?: Date;
   initialEndDate?: Date;
+  bookedPeriods?: BookingPeriod[];
 }
 
 const BookingCalendar = ({
   onBookingChange,
   initialStartDate,
   initialEndDate,
+  bookedPeriods,
 }: BookingCalendarProps) => {
   const [date, setDate] = useState<Date | undefined>(initialStartDate);
   const [startDate, setStartDate] = useState<Date | undefined>(initialStartDate);
@@ -46,14 +50,15 @@ const BookingCalendar = ({
     }
   };
   
-  const handleSelectEnd = (endDate: Date | undefined) => {
-    if (!startDate || !endDate) return;
-    if (endDate < startDate) {
-      setEndDate(undefined);
-      return;
-    }
+  const handleSelectEnd = (value: DateRange | undefined) => {
+    if (!value) return;
     
-    setEndDate(endDate);
+    const { from, to } = value;
+    
+    if (!from) return;
+    
+    setStartDate(from);
+    setEndDate(to);
     
     // Create a proper BookingPeriod object with all required properties
     const newBooking: BookingPeriod = {
@@ -62,8 +67,8 @@ const BookingCalendar = ({
       customerName: '', // Will be filled later
       customerEmail: '', // Will be filled later
       customerPhone: '', // Will be filled later
-      startDate: startDate,
-      endDate: endDate,
+      startDate: from,
+      endDate: to || from, // If 'to' is undefined, use 'from' as end date
       status: 'pending', // Default status
       totalPrice: 0, // Will be calculated later
       createdAt: new Date(),
@@ -112,4 +117,6 @@ const BookingCalendar = ({
   );
 };
 
+// Export as both default and named export to support both import styles
+export { BookingCalendar };
 export default BookingCalendar;

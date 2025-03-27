@@ -1,10 +1,11 @@
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRightIcon, CameraIcon, MusicIcon, MonitorIcon, PackageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/ProductCard';
-import { BookingCalendar } from '@/components/BookingCalendar';
+import BookingCalendar from '@/components/BookingCalendar';
 import { getProducts, getCategories } from '@/services/apiService';
 
 const Index = () => {

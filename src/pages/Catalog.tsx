@@ -19,7 +19,6 @@ const Catalog = () => {
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [category, setCategory] = useState(searchParams.get('category') || '');
   
-  // Parse dates from URL parameters or location state
   const initialStartDateStr = searchParams.get('startDate') || '';
   const initialEndDateStr = searchParams.get('endDate') || '';
   const locationState = location.state as { startDate?: Date; endDate?: Date } | null;
@@ -36,27 +35,22 @@ const Catalog = () => {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [dateFilterActive, setDateFilterActive] = useState(false);
   
-  // Get categories
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => supabaseService.getCategories(),
   });
   
-  // Get products with filters
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', search, category, startDate?.toISOString(), endDate?.toISOString()],
     queryFn: async () => {
       if (startDate && endDate) {
-        // If dates are selected, get available products for that period
         return supabaseService.getAvailableProducts(startDate, endDate);
       } else {
-        // Otherwise, get all products with category/search filters
         return supabaseService.getProducts();
       }
     },
   });
 
-  // Update search params when filters change
   useEffect(() => {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
@@ -65,7 +59,6 @@ const Catalog = () => {
     if (endDate) params.set('endDate', endDate.toISOString());
     setSearchParams(params, { replace: true });
     
-    // Calculate active filters for display
     const filters = [];
     if (search) filters.push(`Поиск: ${search}`);
     if (category) filters.push(`Категория: ${category}`);
@@ -116,14 +109,12 @@ const Catalog = () => {
               </form>
             </div>
             
-            {/* Date filter popover component */}
             <DateFilterPopover 
               startDate={startDate} 
               endDate={endDate} 
               onDateRangeChange={handleDateRangeChange} 
             />
             
-            {/* Filter drawer component */}
             <FilterDrawer 
               category={category}
               setCategory={setCategory}
@@ -136,13 +127,11 @@ const Catalog = () => {
       </div>
       
       <div className="container mx-auto px-4 py-12">
-        {/* Active filters component */}
         <ActiveFilters 
           activeFilters={activeFilters} 
           onClearFilters={clearFilters} 
         />
         
-        {/* Date selection info */}
         {dateFilterActive && (
           <div className="mb-8 p-4 bg-secondary/20 rounded-lg">
             <p className="text-sm">
@@ -151,7 +140,6 @@ const Catalog = () => {
           </div>
         )}
         
-        {/* Products grid */}
         <AnimatedTransition show={true} type="fade">
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
