@@ -32,7 +32,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <div className="w-64 bg-card border-r border-border hidden md:block">
+      <div className="w-64 bg-card border-r border-border hidden md:block fixed h-full top-16 left-0 overflow-y-auto z-30">
         <div className="p-6">
           <h2 className="text-xl font-semibold mb-1">Админ-панель</h2>
           <p className="text-sm text-muted-foreground mb-6">
@@ -98,7 +98,7 @@ const Admin = () => {
       </div>
       
       {/* Main content */}
-      <div className="flex-1 bg-background">
+      <div className="flex-1 bg-background md:ml-64">
         <div className="p-6">
           <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab}>
             <div className="md:hidden mb-6">

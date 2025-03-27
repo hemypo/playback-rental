@@ -92,6 +92,7 @@ const App = () => {
                     </RequireAuth>
                   } />
                   
+                  {/* Create a catch-all route that redirects to NotFound component */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

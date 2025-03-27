@@ -1,18 +1,24 @@
 
-import { Link, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Link, useLocation, useNavigate, useEffect } from "react-router-dom";
 import { AlertTriangleIcon, ArrowLeftIcon, HomeIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.error(
       "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
-  }, [location.pathname]);
+
+    // Check if the user is trying to access an admin route
+    if (location.pathname.startsWith('/admin')) {
+      // Redirect to the main admin page
+      navigate('/admin');
+    }
+  }, [location.pathname, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-secondary/20 px-4">

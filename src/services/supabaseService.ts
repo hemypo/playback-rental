@@ -1,446 +1,172 @@
-import { supabase } from "@/integrations/supabase/client";
-import { Product, BookingPeriod, Category, BookingFormData } from "@/types/product";
+import { createClient } from '@supabase/supabase-js';
+import { isDateRangeAvailable } from '@/utils/dateUtils';
 
-// Products
-export const getProducts = async (): Promise<Product[]> => {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*');
-  
-  if (error) throw error;
-  
-  return (data || []).map(product => ({
-    id: product.id,
-    title: product.title,
-    description: product.description,
-    price: Number(product.price),
-    category: product.category,
-    imageUrl: product.imageurl,
-    available: product.available,
-    quantity: product.quantity
-  }));
-};
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export const getProductById = async (id: string): Promise<Product> => {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('id', id)
-    .single();
-  
-  if (error) throw error;
-  
-  return {
-    id: data.id,
-    title: data.title,
-    description: data.description,
-    price: Number(data.price),
-    category: data.category,
-    imageUrl: data.imageurl,
-    available: data.available,
-    quantity: data.quantity
-  };
-};
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const createProduct = async (product: Omit<Product, 'id'>): Promise<Product> => {
-  const { data, error } = await supabase
-    .from('products')
-    .insert([{
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      category: product.category,
-      imageurl: product.imageUrl,
-      available: product.available,
-      quantity: product.quantity
-    }])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  
-  return {
-    id: data.id,
-    title: data.title,
-    description: data.description,
-    price: Number(data.price),
-    category: data.category,
-    imageUrl: data.imageurl,
-    available: data.available,
-    quantity: data.quantity
-  };
-};
-
-export const updateProduct = async (id: string, product: Partial<Product>): Promise<Product> => {
-  const updateData: any = {};
-  
-  if (product.title !== undefined) updateData.title = product.title;
-  if (product.description !== undefined) updateData.description = product.description;
-  if (product.price !== undefined) updateData.price = product.price;
-  if (product.category !== undefined) updateData.category = product.category;
-  if (product.imageUrl !== undefined) updateData.imageurl = product.imageUrl;
-  if (product.available !== undefined) updateData.available = product.available;
-  if (product.quantity !== undefined) updateData.quantity = product.quantity;
-  
-  const { data, error } = await supabase
-    .from('products')
-    .update(updateData)
-    .eq('id', id)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  
-  return {
-    id: data.id,
-    title: data.title,
-    description: data.description,
-    price: Number(data.price),
-    category: data.category,
-    imageUrl: data.imageurl,
-    available: data.available,
-    quantity: data.quantity
-  };
-};
-
-export const deleteProduct = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('products')
-    .delete()
-    .eq('id', id);
-  
-  if (error) throw error;
-};
-
-// Categories
-export const getCategories = async (): Promise<Category[]> => {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*');
-  
-  if (error) throw error;
-  
-  return (data || []).map(category => ({
-    id: category.id,
-    name: category.name,
-    slug: category.slug || ''
-  }));
-};
-
-export const addCategory = async (categoryName: string): Promise<Category> => {
-  // Check if category exists
-  const { data: existingCategory } = await supabase
-    .from('categories')
-    .select('*')
-    .ilike('name', categoryName)
-    .single();
-  
-  if (existingCategory) {
-    return {
-      id: existingCategory.id,
-      name: existingCategory.name,
-      slug: existingCategory.slug || ''
-    };
+/**
+ * Get all products
+ */
+export const getProducts = async () => {
+  try {
+    const { data, error } = await supabase.from('products').select('*');
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error getting products:', error);
+    return [];
   }
-  
-  // Create new category
-  const slug = categoryName.toLowerCase().replace(/\s+/g, '-');
-  
-  const { data, error } = await supabase
-    .from('categories')
-    .insert([{
-      name: categoryName,
-      slug: slug
-    }])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  
-  return {
-    id: data.id,
-    name: data.name,
-    slug: data.slug || ''
-  };
 };
 
-// Bookings
-const mapBookingData = (data: any): BookingPeriod => {
-  return {
-    id: data.id,
-    productId: data.productId || '',
-    startDate: new Date(data.start_date),
-    endDate: new Date(data.end_date),
-    customerName: data.customer_name,
-    customerEmail: data.customer_email,
-    customerPhone: data.customer_phone,
-    status: data.status as BookingPeriod['status'],
-    totalPrice: data.total_price,
-    notes: data.notes || '',
-    createdAt: new Date(data.created_at || Date.now())
-  };
-};
-
-export const getBookings = async (): Promise<BookingPeriod[]> => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .order('created_at', { ascending: false });
-    
-  if (error) {
-    console.error('Error fetching bookings:', error);
-    throw new Error(error.message);
+/**
+ * Get a single product by ID
+ */
+export const getProductById = async (id: string) => {
+  try {
+    const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+    if (error) throw error;
+    return data || null;
+  } catch (error) {
+    console.error('Error getting product by ID:', error);
+    return null;
   }
-
-  return (data || []).map(mapBookingData);
 };
 
-export const getProductBookings = async (productId: string): Promise<BookingPeriod[]> => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('productId', productId)
-    .order('start_date', { ascending: true });
-    
-  if (error) {
-    console.error('Error fetching product bookings:', error);
-    throw new Error(error.message);
+/**
+ * Get all categories
+ */
+export const getCategories = async () => {
+  try {
+    const { data, error } = await supabase.from('categories').select('*');
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error getting categories:', error);
+    return [];
   }
-
-  return (data || []).map(mapBookingData);
 };
 
-export const createBooking = async (bookingData: BookingFormData): Promise<BookingPeriod> => {
-  // Convert the booking data to the format expected by Supabase
-  const supabaseBookingData = {
-    productId: bookingData.productId,
-    start_date: bookingData.startDate.toISOString(),
-    end_date: bookingData.endDate.toISOString(),
-    customer_name: bookingData.name,
-    customer_email: bookingData.email,
-    customer_phone: bookingData.phone,
-    notes: bookingData.notes || '',
-    status: 'pending' as const,
-    total_price: 0 // Will calculate this based on the product price
-  };
-  
-  // Get the product to calculate the price
-  const product = await getProductById(bookingData.productId);
-  if (!product) {
-    throw new Error('Product not found');
-  }
-  
-  // Calculate total price based on number of days
-  const days = Math.ceil(
-    (bookingData.endDate.getTime() - bookingData.startDate.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  supabaseBookingData.total_price = product.price * days;
-  
-  // Insert the booking
-  const { data, error } = await supabase
-    .from('bookings')
-    .insert(supabaseBookingData)
-    .select()
-    .single();
-    
-  if (error) {
+/**
+ * Create a new booking
+ */
+export const createBooking = async (bookingData: any) => {
+  try {
+    const { data, error } = await supabase.from('bookings').insert([bookingData]);
+    if (error) throw error;
+    return data;
+  } catch (error) {
     console.error('Error creating booking:', error);
-    throw new Error(error.message);
+    return null;
   }
-  
-  return mapBookingData(data);
 };
 
-export const updateBookingStatus = async (id: string, status: BookingPeriod['status']): Promise<BookingPeriod> => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .update({ status })
-    .eq('id', id)
-    .select()
-    .single();
-    
-  if (error) {
-    console.error('Error updating booking status:', error);
-    throw new Error(error.message);
+/**
+ * Update a booking
+ */
+export const updateBooking = async (id: string, updates: any) => {
+  try {
+    const { data, error } = await supabase.from('bookings').update(updates).eq('id', id);
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating booking:', error);
+    return null;
   }
-  
-  return mapBookingData(data);
 };
 
-// Add this new function for available products by date range
-export const getAvailableProducts = async (startDate: Date, endDate: Date): Promise<Product[]> => {
-  // First, get all products
-  const products = await getProducts();
-  
-  // Then, get all bookings that overlap with the requested period
-  const { data: bookings, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .or(`start_date.lte.${endDate.toISOString()},end_date.gte.${startDate.toISOString()}`);
-  
-  if (error) {
-    console.error('Error fetching overlapping bookings:', error);
-    throw new Error(error.message);
+/**
+ * Delete a booking
+ */
+export const deleteBooking = async (id: string) => {
+  try {
+    const { data, error } = await supabase.from('bookings').delete().eq('id', id);
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    return null;
   }
-  
-  // Extract product IDs that are unavailable during this period
-  const unavailableProductIds = new Set(
-    bookings?.map(booking => booking.productId) || []
-  );
-  
-  // Filter out unavailable products
-  return products.filter(product => 
-    product.available && !unavailableProductIds.has(product.id)
-  );
 };
 
-// File exports/imports
-export const exportProductsToCSV = async (): Promise<string> => {
-  const { data: products, error } = await supabase
-    .from('products')
-    .select('*');
-  
-  if (error) throw error;
-  
-  const headers = ['ID', 'Category', 'Title', 'Description', 'Photo', 'Price', 'Quantity'];
-  
-  let csvContent = headers.join(',') + '\n';
-  
-  products.forEach((product) => {
-    const row = [
-      product.id,
-      product.category,
-      `"${product.title.replace(/"/g, '""')}"`, // Escape quotes
-      `"${product.description.replace(/"/g, '""')}"`,
-      product.imageurl,
-      product.price,
-      product.quantity
-    ];
-    csvContent += row.join(',') + '\n';
-  });
-  
-  return csvContent;
-};
-
-export const importProductsFromCSV = async (csvContent: string): Promise<Product[]> => {
-  const lines = csvContent.split('\n');
-  const headers = lines[0].split(',');
-  
-  // Get existing products IDs to avoid duplicates
-  const { data: existingProducts } = await supabase
-    .from('products')
-    .select('id');
-  
-  const existingIDs = new Set(existingProducts?.map(p => p.id) || []);
-  const newProducts: any[] = [];
-  
-  // Parse CSV and prepare product objects
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
+/**
+ * Get all available products for a specific date range
+ */
+export const getAvailableProducts = async (startDate: Date, endDate: Date) => {
+  try {
+    const { data: products } = await supabase.from('products').select('*');
+    const { data: bookings } = await supabase.from('bookings').select('*');
     
-    const values = parseCSVLine(lines[i]);
+    if (!products || !bookings) return [];
     
-    if (values.length !== headers.length) continue;
+    // Map bookings to DateRange objects
+    const bookedRanges = bookings.map(booking => ({
+      start: new Date(booking.start_date),
+      end: new Date(booking.end_date)
+    }));
     
-    const [id, category, title, description, imageUrl, price, quantity] = values;
-    
-    // Skip if product with this ID already exists
-    if (existingIDs.has(id)) continue;
-    
-    // Add category if it doesn't exist
-    await addCategory(category);
-    
-    newProducts.push({
-      title,
-      description,
-      price: parseFloat(price),
-      category,
-      imageurl: imageUrl,
-      available: true,
-      quantity: parseInt(quantity, 10)
+    // Filter products that are available during the selected period
+    const availableProducts = products.filter(product => {
+      if (!product.available) return false;
+      
+      // Find bookings for this product
+      const productBookings = bookings.filter(booking => booking.product_id === product.id);
+      
+      // Map to DateRange objects
+      const productBookedRanges = productBookings.map(booking => ({
+        start: new Date(booking.start_date),
+        end: new Date(booking.end_date)
+      }));
+      
+      // Check if the product is available during the selected period
+      return isDateRangeAvailable(startDate, endDate, productBookedRanges);
     });
+    
+    return availableProducts;
+  } catch (error) {
+    console.error('Error getting available products:', error);
+    return [];
   }
-  
-  // Insert new products
-  if (newProducts.length > 0) {
-    const { data, error } = await supabase
-      .from('products')
-      .insert(newProducts)
-      .select();
+};
+
+/**
+ * Get all bookings
+ */
+export const getBookings = async () => {
+  try {
+    const { data, error } = await supabase.from('bookings').select(`
+      id,
+      product_id,
+      customer_name,
+      customer_email,
+      customer_phone,
+      start_date,
+      end_date,
+      total_price,
+      status,
+      notes,
+      created_at
+    `);
     
     if (error) throw error;
     
-    return data.map(product => ({
-      id: product.id,
-      title: product.title,
-      description: product.description,
-      price: Number(product.price),
-      category: product.category,
-      imageUrl: product.imageurl,
-      available: product.available,
-      quantity: product.quantity
+    // Transform booking data to BookingPeriod objects
+    return data.map(booking => ({
+      id: booking.id,
+      productId: booking.product_id,
+      startDate: new Date(booking.start_date),
+      endDate: new Date(booking.end_date),
+      customerName: booking.customer_name,
+      customerEmail: booking.customer_email,
+      customerPhone: booking.customer_phone,
+      status: booking.status,
+      totalPrice: booking.total_price,
+      notes: booking.notes,
+      createdAt: new Date(booking.created_at)
     }));
+  } catch (error) {
+    console.error('Error getting bookings:', error);
+    return [];
   }
-  
-  return [];
-};
-
-// Helper function to parse CSV line (handles quoted fields with commas)
-function parseCSVLine(line: string): string[] {
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-  
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    
-    if (char === '"') {
-      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
-        // Double quotes inside quotes - add a single quote
-        current += '"';
-        i++;
-      } else {
-        // Toggle quote mode
-        inQuotes = !inQuotes;
-      }
-    } else if (char === ',' && !inQuotes) {
-      // End of field
-      result.push(current);
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  
-  // Add the last field
-  result.push(current);
-  
-  return result;
-}
-
-// Auth functions (placeholders for now, will need to be updated for proper Supabase Auth)
-export const login = async (username: string, password: string): Promise<{ success: boolean; token?: string }> => {
-  // Simple admin authentication (in a real app, this would use Supabase Auth)
-  if (username === 'admin' && password === 'admin123') {
-    const token = `token-${Date.now()}`;
-    localStorage.setItem('auth_token', token);
-    localStorage.setItem('user', JSON.stringify({ username, role: 'admin' }));
-    return { success: true, token };
-  } else {
-    return { success: false };
-  }
-};
-
-export const logout = (): void => {
-  localStorage.removeItem('auth_token');
-  localStorage.removeItem('user');
-};
-
-export const checkAuth = (): boolean => {
-  return !!localStorage.getItem('auth_token');
-};
-
-export const getCurrentUser = () => {
-  const userStr = localStorage.getItem('user');
-  return userStr ? JSON.parse(userStr) : null;
 };

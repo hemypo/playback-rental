@@ -1,4 +1,6 @@
+
 import { addDays, addHours, format, isSameDay, isWithinInterval } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 export interface DateRange {
   start: Date;
@@ -13,6 +15,13 @@ export const formatDateRange = (start: Date, end: Date): string => {
     return `${format(start, 'dd.MM.yyyy')} ${format(start, 'HH:00')} - ${format(end, 'HH:00')}`;
   }
   return `${format(start, 'dd.MM.yyyy HH:00')} - ${format(end, 'dd.MM.yyyy HH:00')}`;
+};
+
+/**
+ * Formats a date in Russian locale
+ */
+export const formatDateRu = (date: Date, formatStr: string): string => {
+  return format(date, formatStr, { locale: ru });
 };
 
 /**
@@ -74,4 +83,23 @@ export const getDatesInRange = (startDate: Date, endDate: Date): Date[] => {
   }
   
   return dates;
+};
+
+/**
+ * Generate business hours options for dropdowns
+ */
+export const getBusinessHoursOptions = (
+  businessHours: { open: number; close: number } = { open: 8, close: 22 }
+): { value: string; label: string }[] => {
+  const options = [];
+  const { open, close } = businessHours;
+  
+  for (let hour = open; hour <= close; hour++) {
+    options.push({
+      value: hour.toString(),
+      label: `${hour}:00`
+    });
+  }
+  
+  return options;
 };

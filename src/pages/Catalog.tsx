@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { FilterIcon, SearchIcon, SlidersIcon, XIcon } from 'lucide-react';
+import { FilterIcon, SearchIcon, SlidersIcon, XIcon, CalendarIcon, ClockIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -19,23 +19,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import ProductCard from '@/components/ProductCard';
-import { BookingCalendar } from '@/components/BookingCalendar';
 import AnimatedTransition from '@/components/AnimatedTransition';
 import * as supabaseService from '@/services/supabaseService';
 import { BookingPeriod } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
-import { formatDateRange } from '@/utils/dateUtils';
+import { formatDateRange, getBusinessHoursOptions, formatDateRu } from '@/utils/dateUtils';
 
 const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [category, setCategory] = useState(searchParams.get('category') || '');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [startTime, setStartTime] = useState<string | undefined>(undefined);
+  const [endTime, setEndTime] = useState<string | undefined>(undefined);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filterPopoverOpen, setFilterPopoverOpen] = useState(false);
+  const popoverTriggerRef = useRef<HTMLButtonElement>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [dateFilterActive, setDateFilterActive] = useState(false);
+  
+  // Business hours for time selection
+  const businessHours = { open: 8, close: 22 };
+  const timeOptions = getBusinessHoursOptions(businessHours);
   
   // Get categories
   const { data: categories } = useQuery({
@@ -56,6 +70,35 @@ const Catalog = () => {
       }
     },
   });
+
+  // Calculate rental period when date/times change
+  useEffect(() => {
+    if (selectedDate && startTime && endTime) {
+      const startHour = parseInt(startTime);
+      const endHour = parseInt(endTime);
+      
+      if (startHour >= endHour) {
+        toast({
+          variant: "destructive",
+          title: "Ошибка выбора времени",
+          description: "Время окончания должно быть позже времени начала",
+        });
+        return;
+      }
+      
+      const start = new Date(selectedDate);
+      start.setHours(startHour, 0, 0, 0);
+      
+      const end = new Date(selectedDate);
+      end.setHours(endHour, 0, 0, 0);
+      
+      setStartDate(start);
+      setEndDate(end);
+      
+      // Close filter popover
+      setFilterPopoverOpen(false);
+    }
+  }, [selectedDate, startTime, endTime]);
   
   // Update search params when filters change
   useEffect(() => {
@@ -66,8 +109,8 @@ const Catalog = () => {
     
     // Calculate active filters for display
     const filters = [];
-    if (search) filters.push(`Search: ${search}`);
-    if (category) filters.push(`Category: ${category}`);
+    if (search) filters.push(`Поиск: ${search}`);
+    if (category) filters.push(`Категория: ${category}`);
     if (startDate && endDate) {
       filters.push(`Период: ${formatDateRange(startDate, endDate)}`);
       setDateFilterActive(true);
@@ -89,20 +132,27 @@ const Catalog = () => {
     setFiltersOpen(false);
   };
   
-  const handleDateChange = (booking: BookingPeriod) => {
-    setStartDate(booking.startDate);
-    setEndDate(booking.endDate);
-    setFiltersOpen(false);
+  const handleDateChange = (date: Date | undefined) => {
+    setSelectedDate(date);
     
-    toast({
-      title: "Период аренды выбран",
-      description: `${formatDateRange(booking.startDate, booking.endDate)}`,
-    });
+    // Reset times when date changes
+    if (date) {
+      setStartTime(businessHours.open.toString());
+      setEndTime((businessHours.open + 4).toString()); // Default to 4 hour rental
+    } else {
+      setStartTime(undefined);
+      setEndTime(undefined);
+      setStartDate(undefined);
+      setEndDate(undefined);
+    }
   };
   
   const clearFilters = () => {
     setSearch('');
     setCategory('');
+    setSelectedDate(undefined);
+    setStartTime(undefined);
+    setEndTime(undefined);
     setStartDate(undefined);
     setEndDate(undefined);
     setSearchParams({});
@@ -118,7 +168,7 @@ const Catalog = () => {
               <form onSubmit={handleSubmit}>
                 <Input
                   id="search-input"
-                  placeholder="Search equipment..."
+                  placeholder="Поиск оборудования..."
                   className="pl-10 bg-white/90 border-0 h-12"
                   defaultValue={search}
                 />
@@ -126,6 +176,97 @@ const Catalog = () => {
                 <Button type="submit" className="sr-only">Поиск</Button>
               </form>
             </div>
+            
+            {/* Time selection popover */}
+            <Popover open={filterPopoverOpen} onOpenChange={setFilterPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  ref={popoverTriggerRef} 
+                  variant="outline" 
+                  className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-12"
+                >
+                  <CalendarIcon className="mr-2 h-5 w-5" />
+                  {startDate && endDate ? formatDateRange(startDate, endDate) : "Выбрать время"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <div className="p-4 space-y-4">
+                  <h3 className="font-medium">Выберите дату и время</h3>
+                  
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={handleDateChange}
+                    disabled={(date) => date < new Date()}
+                    className="rounded-md border"
+                  />
+                  
+                  {selectedDate && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <ClockIcon className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">Время аренды</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs text-muted-foreground">С</label>
+                          <select 
+                            className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            value={startTime}
+                            onChange={(e) => setStartTime(e.target.value)}
+                          >
+                            <option value="">Выберите</option>
+                            {timeOptions.map((option) => (
+                              <option key={`start-${option.value}`} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="text-xs text-muted-foreground">До</label>
+                          <select 
+                            className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            value={endTime}
+                            onChange={(e) => setEndTime(e.target.value)}
+                          >
+                            <option value="">Выберите</option>
+                            {timeOptions.map((option) => (
+                              <option key={`end-${option.value}`} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div className="pt-2">
+                        <Button 
+                          className="w-full"
+                          disabled={!startTime || !endTime}
+                          onClick={() => {
+                            if (startTime && endTime && parseInt(startTime) >= parseInt(endTime)) {
+                              toast({
+                                variant: "destructive",
+                                title: "Ошибка выбора времени",
+                                description: "Время окончания должно быть позже времени начала",
+                              });
+                              return;
+                            }
+                            setFilterPopoverOpen(false);
+                          }}
+                        >
+                          Применить
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+            
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-12">
@@ -151,13 +292,6 @@ const Catalog = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Диапазон дат</h3>
-                    <BookingCalendar 
-                      onBookingChange={handleDateChange}
-                    />
                   </div>
                   
                   <Button 
