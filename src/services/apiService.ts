@@ -1,5 +1,6 @@
 
 import axios from 'axios';
+import { BookingPeriod } from '@/types/product';
 
 const API_URL = 'https://api.example.com';
 
@@ -108,98 +109,32 @@ export const getCategories = async () => {
   }
 };
 
-// Booking related functions
-export const getBookings = async () => {
+// Booking related functions - Now all bookings come from Supabase
+export const getBookings = async (): Promise<BookingPeriod[]> => {
   try {
-    // For demo purposes, we'll use mock data
-    return [
-      {
-        id: '1',
-        productId: '1',
-        customerName: 'Иван Петров',
-        customerPhone: '+7 (999) 123-4567',
-        customerEmail: 'ivan@example.com',
-        startDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        totalPrice: 5400,
-        status: 'confirmed',
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-      },
-      {
-        id: '2',
-        productId: '2',
-        customerName: 'Мария Сидорова',
-        customerPhone: '+7 (999) 765-4321',
-        customerEmail: 'maria@example.com',
-        startDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        endDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-        totalPrice: 3600,
-        status: 'pending',
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
-      },
-      {
-        id: '3',
-        productId: '3',
-        customerName: 'Алексей Иванов',
-        customerPhone: '+7 (999) 555-1234',
-        customerEmail: 'alexey@example.com',
-        startDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-        endDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        totalPrice: 2800,
-        status: 'completed',
-        createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
-      },
-      {
-        id: '4',
-        productId: '4',
-        customerName: 'Елена Смирнова',
-        customerPhone: '+7 (999) 777-9999',
-        customerEmail: 'elena@example.com',
-        startDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-        totalPrice: 12500,
-        status: 'confirmed',
-        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
-      },
-      {
-        id: '5',
-        productId: '1',
-        customerName: 'Дмитрий Козлов',
-        customerPhone: '+7 (999) 888-7777',
-        customerEmail: 'dmitry@example.com',
-        startDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-        endDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-        totalPrice: 4200,
-        status: 'cancelled',
-        createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000)
-      }
-    ];
+    const { getBookings } = await import('@/services/supabaseService');
+    const bookings = await getBookings();
+    return bookings;
   } catch (error) {
     console.error('Error fetching bookings:', error);
     return [];
   }
 };
 
-export const getProductBookings = async (productId: string) => {
+export const getProductBookings = async (productId: string): Promise<BookingPeriod[]> => {
   try {
-    const allBookings = await getBookings();
-    return allBookings.filter((booking: any) => booking.productId === productId);
+    const { getProductBookings } = await import('@/services/supabaseService');
+    return await getProductBookings(productId);
   } catch (error) {
     console.error(`Error fetching bookings for product ${productId}:`, error);
     return [];
   }
 };
 
-export const createBooking = async (bookingData: any) => {
+export const createBooking = async (bookingData: any): Promise<BookingPeriod | null> => {
   try {
-    // In a real app, we would make an API call here
-    console.log('Booking data submitted:', bookingData);
-    return {
-      id: Math.random().toString(36).substring(2, 9),
-      ...bookingData,
-      status: 'pending',
-      createdAt: new Date()
-    };
+    const { createBooking } = await import('@/services/supabaseService');
+    return await createBooking(bookingData);
   } catch (error) {
     console.error('Error creating booking:', error);
     return null;

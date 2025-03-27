@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Table, 
@@ -14,8 +14,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogFooter,
-  DialogTrigger 
+  DialogFooter
 } from '@/components/ui/dialog';
 import { 
   DropdownMenu, 
@@ -48,8 +47,8 @@ const AdminBookings = () => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
-  // Fetch bookings
-  const { data: bookings, refetch, isLoading } = useQuery({
+  // Fetch bookings directly from Supabase
+  const { data: bookings, refetch, isLoading, isError } = useQuery({
     queryKey: ['bookings'],
     queryFn: supabaseService.getBookings,
   });
@@ -162,6 +161,12 @@ const AdminBookings = () => {
                       <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                       <span>Loading bookings...</span>
                     </div>
+                  </TableCell>
+                </TableRow>
+              ) : isError ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-4 text-red-500">
+                    Error loading bookings. Please try again.
                   </TableCell>
                 </TableRow>
               ) : filteredBookings.length === 0 ? (

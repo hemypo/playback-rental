@@ -1,193 +1,115 @@
-
 import { useState, useEffect } from 'react';
-import { addDays } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { addMonths, subMonths } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getBusinessHoursOptions } from '@/utils/dateUtils';
 import { BookingPeriod } from '@/types/product';
-import { toast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
 
 interface BookingCalendarProps {
-  onBookingChange: (bookingPeriod: BookingPeriod) => void;
-  bookedPeriods?: BookingPeriod[];
+  onBookingChange: (booking: BookingPeriod) => void;
   initialStartDate?: Date;
   initialEndDate?: Date;
 }
 
-export const BookingCalendar = ({ 
-  onBookingChange, 
-  bookedPeriods = [],
+const BookingCalendar = ({
+  onBookingChange,
   initialStartDate,
-  initialEndDate
+  initialEndDate,
 }: BookingCalendarProps) => {
-  const [date, setDate] = useState<Date | undefined>(initialStartDate || undefined);
-  const [startTime, setStartTime] = useState<string | undefined>(
-    initialStartDate ? initialStartDate.getHours().toString() : undefined
-  );
-  const [endTime, setEndTime] = useState<string | undefined>(
-    initialEndDate ? initialEndDate.getHours().toString() : undefined
-  );
+  const [date, setDate] = useState<Date | undefined>(initialStartDate);
+  const [startDate, setStartDate] = useState<Date | undefined>(initialStartDate);
+  const [endDate, setEndDate] = useState<Date | undefined>(initialEndDate);
+  const [isSelectingRange, setIsSelectingRange] = useState(false);
   
-  // Business hours for time selection
-  const businessHours = { open: 8, close: 22 };
-  const hourOptions = getBusinessHoursOptions(businessHours);
+  useEffect(() => {
+    setStartDate(initialStartDate);
+    setEndDate(initialEndDate);
+  }, [initialStartDate, initialEndDate]);
   
-  // Handle date selection
-  const handleDateSelect = (selected: Date | undefined) => {
-    setDate(selected);
-    
-    // Reset times if date is cleared
-    if (!selected) {
-      setStartTime(undefined);
-      setEndTime(undefined);
+  const handleDayClick = (day: Date) => {
+    if (!isSelectingRange) {
+      // Start selecting the range
+      setStartDate(day);
+      setEndDate(undefined);
+      setIsSelectingRange(true);
+    } else {
+      // Finish selecting the range
+      if (day < startDate!) {
+        setStartDate(day);
+        setEndDate(startDate);
+      } else {
+        setEndDate(day);
+      }
+      setIsSelectingRange(false);
+    }
+  };
+  
+  const handleSelectEnd = (endDate: Date | undefined) => {
+    if (!startDate || !endDate) return;
+    if (endDate < startDate) {
+      setEndDate(undefined);
       return;
     }
     
-    // Set default start and end times
-    if (!startTime) {
-      setStartTime(businessHours.open.toString());
-    }
+    setEndDate(endDate);
     
-    if (!endTime) {
-      // Default to 4 hour rental
-      const defaultEndHour = Math.min(businessHours.open + 4, businessHours.close);
-      setEndTime(defaultEndHour.toString());
-    }
-  };
-  
-  // Handle time selection
-  const handleStartTimeChange = (value: string) => {
-    setStartTime(value);
+    // Create a proper BookingPeriod object with all required properties
+    const newBooking: BookingPeriod = {
+      id: 'temp-id', // Temporary ID
+      productId: 'temp-product', // Temporary product ID
+      customerName: '', // Will be filled later
+      customerEmail: '', // Will be filled later
+      customerPhone: '', // Will be filled later
+      startDate: startDate,
+      endDate: endDate,
+      status: 'pending', // Default status
+      totalPrice: 0, // Will be calculated later
+      createdAt: new Date(),
+      notes: ''
+    };
     
-    // If end time is earlier than start time, adjust it
-    if (endTime && parseInt(value) >= parseInt(endTime)) {
-      const newEndHour = Math.min(parseInt(value) + 4, businessHours.close);
-      setEndTime(newEndHour.toString());
-    }
+    onBookingChange(newBooking);
   };
-  
-  const handleEndTimeChange = (value: string) => {
-    setEndTime(value);
-  };
-  
-  // Update parent component when booking changes
-  useEffect(() => {
-    if (date && startTime && endTime) {
-      const startHour = parseInt(startTime);
-      const endHour = parseInt(endTime);
-      
-      if (startHour >= endHour) {
-        toast({
-          variant: "destructive",
-          title: "Ошибка выбора времени",
-          description: "Время окончания должно быть позже времени начала",
-        });
-        return;
-      }
-      
-      const start = new Date(date);
-      start.setHours(startHour, 0, 0, 0);
-      
-      const end = new Date(date);
-      end.setHours(endHour, 0, 0, 0);
-      
-      onBookingChange({ startDate: start, endDate: end });
-    }
-  }, [date, startTime, endTime, onBookingChange]);
-  
-  // Initialize with passed values
-  useEffect(() => {
-    if (initialStartDate && initialEndDate) {
-      setDate(new Date(initialStartDate));
-      setStartTime(initialStartDate.getHours().toString());
-      setEndTime(initialEndDate.getHours().toString());
-    }
-  }, [initialStartDate, initialEndDate]);
   
   return (
-    <div className="space-y-4 w-full">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Date selector */}
-        <div className="md:col-span-1">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button 
-                variant="outline" 
-                className={`w-full justify-start text-left ${!date && 'text-muted-foreground'}`}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? date.toLocaleDateString() : "Выберите дату"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={handleDateSelect}
-                disabled={(date) => date < new Date()}
-                initialFocus
-                className="rounded-md border bg-white pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+    <div className="border rounded-md p-2">
+      <div className="flex items-center justify-between py-2">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDate(subMonths(date || new Date(), 1))}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            Предыдущий
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDate(addMonths(date || new Date(), 1))}
+          >
+            Следующий
+            <CalendarIcon className="ml-2 h-4 w-4" />
+          </Button>
         </div>
-        
-        {/* Time selectors */}
-        <div className="md:col-span-2 grid grid-cols-2 gap-4">
-          <div>
-            <Select 
-              value={startTime} 
-              onValueChange={handleStartTimeChange}
-              disabled={!date}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Начало" />
-              </SelectTrigger>
-              <SelectContent className="pointer-events-auto">
-                {hourOptions.map((option) => (
-                  <SelectItem key={`start-${option.value}`} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Select 
-              value={endTime} 
-              onValueChange={handleEndTimeChange}
-              disabled={!startTime}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Окончание" />
-              </SelectTrigger>
-              <SelectContent className="pointer-events-auto">
-                {hourOptions
-                  .filter(option => !startTime || parseInt(option.value) > parseInt(startTime))
-                  .map((option) => (
-                    <SelectItem key={`end-${option.value}`} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))
-                }
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <span className="text-sm font-medium">
+          {format(date || new Date(), 'MMMM yyyy')}
+        </span>
       </div>
-      
-      {/* Selected booking info */}
-      {date && startTime && endTime && (
-        <div className="text-sm p-3 bg-secondary/20 rounded-md">
-          <p>
-            Выбрано: <span className="font-medium">{date.toLocaleDateString()}, {startTime}:00 - {endTime}:00</span>
-          </p>
-        </div>
-      )}
+      <Calendar
+        mode="range"
+        defaultMonth={date}
+        selected={{
+          from: startDate,
+          to: endDate,
+        }}
+        onSelect={handleSelectEnd}
+        className={cn("border-0 p-0")}
+      />
     </div>
   );
 };
+
+export default BookingCalendar;

@@ -1,14 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { addDays, format, isWithinInterval, startOfDay, endOfDay, eachDayOfInterval } from 'date-fns';
+import { addDays, format, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
   CalendarIcon,
   ChevronLeft,
   ChevronRight,
   Filter,
-  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,8 +30,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { getBookings, getProducts, getCategories } from '@/services/apiService';
 import { BookingPeriod, Product, Category } from '@/types/product';
+import * as supabaseService from '@/services/supabaseService';
 
 // Interface for bookings with display name
 interface ExtendedBooking extends BookingPeriod {
@@ -45,26 +44,25 @@ const AdminCalendar = () => {
   const [daysToShow, setDaysToShow] = useState(14);
   const [filteredCategory, setFilteredCategory] = useState<string>('');
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [extendedBookings, setExtendedBookings] = useState<ExtendedBooking[]>([]);
 
   // Fetch data
-  const { data: bookings } = useQuery({
+  const { data: bookings, isLoading: isLoadingBookings } = useQuery({
     queryKey: ['admin-bookings'],
-    queryFn: () => getBookings()
+    queryFn: supabaseService.getBookings
   });
 
-  const { data: products } = useQuery({
+  const { data: products, isLoading: isLoadingProducts } = useQuery({
     queryKey: ['admin-products'],
-    queryFn: () => getProducts()
+    queryFn: supabaseService.getProducts
   });
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => getCategories()
+    queryFn: supabaseService.getCategories
   });
 
   // Combine bookings with product names
-  const [extendedBookings, setExtendedBookings] = useState<ExtendedBooking[]>([]);
-
   useEffect(() => {
     if (bookings && products) {
       const extended = bookings.map(booking => {
@@ -73,7 +71,7 @@ const AdminCalendar = () => {
           ...booking,
           productName: product?.title || 'Неизвестный товар',
           productCategory: product?.category || 'Неизвестная категория'
-        };
+        } as ExtendedBooking;
       });
       setExtendedBookings(extended);
     }
@@ -124,7 +122,7 @@ const AdminCalendar = () => {
   };
 
   // Get status color
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: BookingPeriod['status']) => {
     switch (status) {
       case 'confirmed':
         return 'bg-green-500';
@@ -138,6 +136,14 @@ const AdminCalendar = () => {
         return 'bg-gray-400';
     }
   };
+
+  if (isLoadingBookings || isLoadingProducts) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -155,7 +161,7 @@ const AdminCalendar = () => {
               <SelectValue placeholder="Все категории" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Все категории</SelectItem>
+              <SelectItem value="">Все категории</SelectItem>
               {categories?.map((category: Category) => (
                 <SelectItem key={category.id} value={category.name}>
                   {category.name}
@@ -196,7 +202,6 @@ const AdminCalendar = () => {
                   }
                 }}
                 initialFocus
-                className="pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
@@ -236,72 +241,80 @@ const AdminCalendar = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((product) => (
-              <tr key={product.id} className="border-t hover:bg-muted/30">
-                <td className="sticky left-0 z-10 bg-card p-3 font-medium border-r">
-                  <div className="flex items-center gap-2">
-                    {product.imageUrl && (
-                      <div 
-                        className="w-8 h-8 rounded bg-center bg-cover flex-shrink-0"
-                        style={{ backgroundImage: `url(${product.imageUrl})` }}
-                      />
-                    )}
-                    <div>
-                      <div className="truncate max-w-[150px]">{product.title}</div>
-                      <div className="text-xs text-muted-foreground">{product.category}</div>
-                    </div>
-                  </div>
+            {filteredProducts.length === 0 ? (
+              <tr>
+                <td colSpan={days.length + 1} className="text-center py-8">
+                  {isLoadingProducts ? 'Загрузка товаров...' : 'Нет доступных товаров'}
                 </td>
-                
-                {days.map((day, dayIndex) => {
-                  const bookingsOnDay = getBookingsForProductOnDay(product.id, day);
-                  return (
-                    <td 
-                      key={dayIndex} 
-                      className={`p-2 border-r ${
-                        day.getDay() === 0 || day.getDay() === 6 ? 'bg-muted/30' : ''
-                      } ${bookingsOnDay.length > 0 ? 'relative' : ''}`}
-                    >
-                      {bookingsOnDay.length > 0 ? (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className={`h-full w-full flex items-center justify-center cursor-default`}>
-                                <div className={`w-full h-6 ${getStatusColor(bookingsOnDay[0].status)} rounded-sm flex items-center justify-center text-white text-xs`}>
-                                  {bookingsOnDay[0].customerName.split(' ')[0]}
-                                </div>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="p-0">
-                              <div className="p-3 max-w-[250px]">
-                                <div className="font-medium mb-1">{bookingsOnDay[0].customerName}</div>
-                                <div className="text-xs mb-2">
-                                  {format(new Date(bookingsOnDay[0].startDate), 'dd.MM.yyyy')} - {format(new Date(bookingsOnDay[0].endDate), 'dd.MM.yyyy')}
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <div className="text-xs text-muted-foreground">{bookingsOnDay[0].customerPhone}</div>
-                                  <Badge variant="outline">
-                                    {bookingsOnDay[0].status === 'confirmed' 
-                                      ? 'Подтверждено' 
-                                      : bookingsOnDay[0].status === 'pending' 
-                                      ? 'В ожидании'
-                                      : bookingsOnDay[0].status === 'cancelled'
-                                      ? 'Отменено'
-                                      : 'Завершено'}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : (
-                        <div className="h-6"></div> // Empty cell placeholder
-                      )}
-                    </td>
-                  );
-                })}
               </tr>
-            ))}
+            ) : (
+              filteredProducts.map((product) => (
+                <tr key={product.id} className="border-t hover:bg-muted/30">
+                  <td className="sticky left-0 z-10 bg-card p-3 font-medium border-r">
+                    <div className="flex items-center gap-2">
+                      {product.imageUrl && (
+                        <div 
+                          className="w-8 h-8 rounded bg-center bg-cover flex-shrink-0"
+                          style={{ backgroundImage: `url(${product.imageUrl})` }}
+                        />
+                      )}
+                      <div>
+                        <div className="truncate max-w-[150px]">{product.title}</div>
+                        <div className="text-xs text-muted-foreground">{product.category}</div>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  {days.map((day, dayIndex) => {
+                    const bookingsOnDay = getBookingsForProductOnDay(product.id, day);
+                    return (
+                      <td 
+                        key={dayIndex} 
+                        className={`p-2 border-r ${
+                          day.getDay() === 0 || day.getDay() === 6 ? 'bg-muted/30' : ''
+                        } ${bookingsOnDay.length > 0 ? 'relative' : ''}`}
+                      >
+                        {bookingsOnDay.length > 0 ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className={`h-full w-full flex items-center justify-center cursor-default`}>
+                                  <div className={`w-full h-6 ${getStatusColor(bookingsOnDay[0].status)} rounded-sm flex items-center justify-center text-white text-xs`}>
+                                    {bookingsOnDay[0].customerName.split(' ')[0]}
+                                  </div>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="p-0">
+                                <div className="p-3 max-w-[250px]">
+                                  <div className="font-medium mb-1">{bookingsOnDay[0].customerName}</div>
+                                  <div className="text-xs mb-2">
+                                    {format(new Date(bookingsOnDay[0].startDate), 'dd.MM.yyyy')} - {format(new Date(bookingsOnDay[0].endDate), 'dd.MM.yyyy')}
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <div className="text-xs text-muted-foreground">{bookingsOnDay[0].customerPhone}</div>
+                                    <Badge variant="outline">
+                                      {bookingsOnDay[0].status === 'confirmed' 
+                                        ? 'Подтверждено' 
+                                        : bookingsOnDay[0].status === 'pending' 
+                                        ? 'В ожидании'
+                                        : bookingsOnDay[0].status === 'cancelled'
+                                        ? 'Отменено'
+                                        : 'Завершено'}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <div className="h-6"></div> // Empty cell placeholder
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
