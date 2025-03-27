@@ -151,19 +151,19 @@
   }
   
   .animate-in {
-    @apply opacity-0 animate-fade-in;
+    @apply opacity-1 animate-fade-in;
   }
   
   .animate-in-up {
-    @apply opacity-0 animate-slide-up;
+    @apply opacity-1 animate-slide-up;
   }
   
   .animate-in-down {
-    @apply opacity-0 animate-slide-down;
+    @apply opacity-1 animate-slide-down;
   }
   
   .animate-in-scale {
-    @apply opacity-0 animate-scale-in;
+    @apply opacity-1 animate-scale-in;
   }
 
   .smooth-transition {
