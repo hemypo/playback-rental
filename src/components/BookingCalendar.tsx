@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { BookingPeriod } from '@/types/product';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { DateRange } from '@/utils/dateUtils';
+import { DateRange } from 'react-day-picker';
 
 interface BookingCalendarProps {
   onBookingChange: (booking: BookingPeriod) => void;
@@ -50,10 +50,10 @@ const BookingCalendar = ({
     }
   };
   
-  const handleSelectEnd = (value: DateRange | undefined) => {
-    if (!value) return;
+  const handleSelectEnd = (range: DateRange | undefined) => {
+    if (!range) return;
     
-    const { from, to } = value;
+    const { from, to } = range;
     
     if (!from) return;
     
@@ -111,7 +111,7 @@ const BookingCalendar = ({
           to: endDate,
         }}
         onSelect={handleSelectEnd}
-        className={cn("border-0 p-0")}
+        className={cn("border-0 p-0 pointer-events-auto")}
       />
     </div>
   );

@@ -26,10 +26,16 @@ const DateFilterPopover = ({
   
   const handleBookingChange = (booking: BookingPeriod) => {
     onDateRangeChange(booking.startDate, booking.endDate);
+    // Don't close the popover here, let the user confirm with Apply button
   };
   
   const handleClear = () => {
     onDateRangeChange(undefined, undefined);
+    setIsOpen(false);
+  };
+  
+  const handleApply = () => {
+    // Only close the popover when the user explicitly applies the selection
     setIsOpen(false);
   };
   
@@ -61,6 +67,13 @@ const DateFilterPopover = ({
               onClick={handleClear}
             >
               Очистить
+            </Button>
+            <Button
+              variant="default"
+              className="flex-1"
+              onClick={handleApply}
+            >
+              Применить
             </Button>
           </div>
         </div>
