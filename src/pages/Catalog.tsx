@@ -1,55 +1,26 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { FilterIcon, SearchIcon, SlidersIcon, XIcon, CalendarIcon, ClockIcon } from 'lucide-react';
+import { SearchIcon, SlidersIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import FilterDrawer from '@/components/FilterDrawer';
+import DateFilterPopover from '@/components/DateFilterPopover';
+import ActiveFilters from '@/components/ActiveFilters';
 import ProductCard from '@/components/ProductCard';
 import AnimatedTransition from '@/components/AnimatedTransition';
 import * as supabaseService from '@/services/supabaseService';
-import { BookingPeriod } from '@/types/product';
+import { formatDateRange } from '@/utils/dateUtils';
 import { toast } from '@/hooks/use-toast';
-import { formatDateRange, getBusinessHoursOptions, formatDateRu } from '@/utils/dateUtils';
 
 const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [category, setCategory] = useState(searchParams.get('category') || '');
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [startTime, setStartTime] = useState<string | undefined>(undefined);
-  const [endTime, setEndTime] = useState<string | undefined>(undefined);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filterPopoverOpen, setFilterPopoverOpen] = useState(false);
-  const popoverTriggerRef = useRef<HTMLButtonElement>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [dateFilterActive, setDateFilterActive] = useState(false);
-  
-  // Business hours for time selection
-  const businessHours = { open: 8, close: 22 };
-  const timeOptions = getBusinessHoursOptions(businessHours);
   
   // Get categories
   const { data: categories } = useQuery({
@@ -71,35 +42,6 @@ const Catalog = () => {
     },
   });
 
-  // Calculate rental period when date/times change
-  useEffect(() => {
-    if (selectedDate && startTime && endTime) {
-      const startHour = parseInt(startTime);
-      const endHour = parseInt(endTime);
-      
-      if (startHour >= endHour) {
-        toast({
-          variant: "destructive",
-          title: "Ошибка выбора времени",
-          description: "Время окончания должно быть позже времени начала",
-        });
-        return;
-      }
-      
-      const start = new Date(selectedDate);
-      start.setHours(startHour, 0, 0, 0);
-      
-      const end = new Date(selectedDate);
-      end.setHours(endHour, 0, 0, 0);
-      
-      setStartDate(start);
-      setEndDate(end);
-      
-      // Close filter popover
-      setFilterPopoverOpen(false);
-    }
-  }, [selectedDate, startTime, endTime]);
-  
   // Update search params when filters change
   useEffect(() => {
     const params = new URLSearchParams();
@@ -124,35 +66,16 @@ const Catalog = () => {
     e.preventDefault();
     const searchInput = (document.getElementById('search-input') as HTMLInputElement)?.value;
     setSearch(searchInput || '');
-    setFiltersOpen(false);
   };
   
-  const handleCategoryChange = (value: string) => {
-    setCategory(value === 'all' ? '' : value);
-    setFiltersOpen(false);
-  };
-  
-  const handleDateChange = (date: Date | undefined) => {
-    setSelectedDate(date);
-    
-    // Reset times when date changes
-    if (date) {
-      setStartTime(businessHours.open.toString());
-      setEndTime((businessHours.open + 4).toString()); // Default to 4 hour rental
-    } else {
-      setStartTime(undefined);
-      setEndTime(undefined);
-      setStartDate(undefined);
-      setEndDate(undefined);
-    }
+  const handleDateRangeChange = (start: Date | undefined, end: Date | undefined) => {
+    setStartDate(start);
+    setEndDate(end);
   };
   
   const clearFilters = () => {
     setSearch('');
     setCategory('');
-    setSelectedDate(undefined);
-    setStartTime(undefined);
-    setEndTime(undefined);
     setStartDate(undefined);
     setEndDate(undefined);
     setSearchParams({});
@@ -163,7 +86,7 @@ const Catalog = () => {
       <div className="bg-gradient-to-r from-primary/90 to-primary py-20 px-4">
         <div className="container mx-auto">
           <h1 className="heading-1 text-white mb-6">Каталог техники</h1>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <div className="relative flex-1 max-w-md">
               <form onSubmit={handleSubmit}>
                 <Input
@@ -177,160 +100,31 @@ const Catalog = () => {
               </form>
             </div>
             
-            {/* Time selection popover */}
-            <Popover open={filterPopoverOpen} onOpenChange={setFilterPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button 
-                  ref={popoverTriggerRef} 
-                  variant="outline" 
-                  className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-12"
-                >
-                  <CalendarIcon className="mr-2 h-5 w-5" />
-                  {startDate && endDate ? formatDateRange(startDate, endDate) : "Выбрать время"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <div className="p-4 space-y-4">
-                  <h3 className="font-medium">Выберите дату и время</h3>
-                  
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={handleDateChange}
-                    disabled={(date) => date < new Date()}
-                    className="rounded-md border"
-                  />
-                  
-                  {selectedDate && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <ClockIcon className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium">Время аренды</span>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-xs text-muted-foreground">С</label>
-                          <select 
-                            className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            value={startTime}
-                            onChange={(e) => setStartTime(e.target.value)}
-                          >
-                            <option value="">Выберите</option>
-                            {timeOptions.map((option) => (
-                              <option key={`start-${option.value}`} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        
-                        <div>
-                          <label className="text-xs text-muted-foreground">До</label>
-                          <select 
-                            className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            value={endTime}
-                            onChange={(e) => setEndTime(e.target.value)}
-                          >
-                            <option value="">Выберите</option>
-                            {timeOptions.map((option) => (
-                              <option key={`end-${option.value}`} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      
-                      <div className="pt-2">
-                        <Button 
-                          className="w-full"
-                          disabled={!startTime || !endTime}
-                          onClick={() => {
-                            if (startTime && endTime && parseInt(startTime) >= parseInt(endTime)) {
-                              toast({
-                                variant: "destructive",
-                                title: "Ошибка выбора времени",
-                                description: "Время окончания должно быть позже времени начала",
-                              });
-                              return;
-                            }
-                            setFilterPopoverOpen(false);
-                          }}
-                        >
-                          Применить
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
+            {/* Date filter popover component */}
+            <DateFilterPopover 
+              startDate={startDate} 
+              endDate={endDate} 
+              onDateRangeChange={handleDateRangeChange} 
+            />
             
-            <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-12">
-                  <FilterIcon className="mr-2 h-5 w-5" />
-                  Фильтры
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="w-full max-w-md glass-panel">
-                <SheetHeader>
-                  <SheetTitle>Фильтр</SheetTitle>
-                </SheetHeader>
-                <div className="py-6 space-y-8">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Категории</h3>
-                    <Select value={category || 'all'} onValueChange={handleCategoryChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Categories" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Все категории</SelectItem>
-                        {categories?.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full" 
-                    onClick={clearFilters}
-                  >
-                    Очистить
-                  </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
+            {/* Filter drawer component */}
+            <FilterDrawer 
+              category={category}
+              setCategory={setCategory}
+              categories={categories}
+              activeFilters={activeFilters}
+              onClearFilters={clearFilters}
+            />
           </div>
         </div>
       </div>
       
       <div className="container mx-auto px-4 py-12">
-        {/* Active filters */}
-        {activeFilters.length > 0 && (
-          <div className="mb-8">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-sm font-medium">Фильтры:</span>
-              {activeFilters.map((filter, index) => (
-                <Badge key={index} variant="secondary" className="px-3 py-1">
-                  {filter}
-                </Badge>
-              ))}
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-7 px-2" 
-                onClick={clearFilters}
-              >
-                <XIcon className="h-3 w-3 mr-1" />
-                Очистить
-              </Button>
-            </div>
-          </div>
-        )}
+        {/* Active filters component */}
+        <ActiveFilters 
+          activeFilters={activeFilters} 
+          onClearFilters={clearFilters} 
+        />
         
         {/* Date selection info */}
         {dateFilterActive && (
