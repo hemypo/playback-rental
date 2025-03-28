@@ -5,12 +5,21 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRightIcon, CameraIcon, MusicIcon, MonitorIcon, PackageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/ProductCard';
-import BookingCalendar from '@/components/BookingCalendar';
 import { getProducts, getCategories } from '@/services/apiService';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
 
 const Index = () => {
   const navigate = useNavigate();
-  const [bookingPeriod, setBookingPeriod] = useState<{ startDate?: Date; endDate?: Date }>({});
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+  const [startHour, setStartHour] = useState("9");
+  const [startMinute, setStartMinute] = useState("0");
+  const [endHour, setEndHour] = useState("18");
+  const [endMinute, setEndMinute] = useState("0");
+  const [isStartCalendarOpen, setIsStartCalendarOpen] = useState(false);
+  const [isEndCalendarOpen, setIsEndCalendarOpen] = useState(false);
 
   const { data: featuredProducts, isLoading: productsLoading } = useQuery({
     queryKey: ['featuredProducts'],
@@ -23,16 +32,29 @@ const Index = () => {
     queryFn: () => getCategories(),
   });
 
-  const handleBookingChange = (booking: { startDate: Date; endDate: Date }) => {
-    setBookingPeriod(booking);
-  };
+  // Generate hour and minute options
+  const hours = Array.from({ length: 24 }, (_, i) => ({
+    value: i.toString(),
+    label: i < 10 ? `0${i}` : `${i}`
+  }));
+  
+  const minutes = [0, 15, 30, 45].map(m => ({
+    value: m.toString(),
+    label: m < 10 ? `0${m}` : `${m}`
+  }));
 
   const handleSearchClick = () => {
-    if (bookingPeriod.startDate && bookingPeriod.endDate) {
+    if (startDate && endDate) {
+      const fullStartDate = new Date(startDate);
+      fullStartDate.setHours(parseInt(startHour), parseInt(startMinute), 0);
+      
+      const fullEndDate = new Date(endDate);
+      fullEndDate.setHours(parseInt(endHour), parseInt(endMinute), 0);
+      
       navigate('/catalog', { 
         state: { 
-          startDate: bookingPeriod.startDate, 
-          endDate: bookingPeriod.endDate 
+          startDate: fullStartDate, 
+          endDate: fullEndDate 
         } 
       });
     }
@@ -59,15 +81,145 @@ const Index = () => {
             
             <div className="w-full glass-panel p-4 rounded-xl">
               <h2 className="text-lg font-medium mb-3">Найдите доступное оборудование</h2>
-              <BookingCalendar 
-                onBookingChange={handleBookingChange} 
-                isCompact={true} // Use compact version here
-              />
+              
+              {/* Simple date and time selection */}
+              <div className="space-y-4">
+                {/* Start Date & Time */}
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <div className="relative w-1/2 pr-2">
+                      <label className="text-sm font-medium">Дата начала</label>
+                      <div className="relative">
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-between text-left font-normal"
+                          onClick={() => setIsStartCalendarOpen(!isStartCalendarOpen)}
+                        >
+                          {startDate ? format(startDate, 'dd.MM.yyyy') : 'Выберите дату'}
+                        </Button>
+                        
+                        {isStartCalendarOpen && (
+                          <div className="absolute top-full left-0 z-50 mt-1 bg-white rounded-md shadow-md">
+                            <Calendar
+                              mode="single"
+                              selected={startDate}
+                              onSelect={(date) => {
+                                setStartDate(date);
+                                setIsStartCalendarOpen(false);
+                              }}
+                              initialFocus
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="w-1/2 pl-2 space-y-1">
+                      <label className="text-sm font-medium">Время начала</label>
+                      <div className="flex gap-2">
+                        <Select value={startHour} onValueChange={setStartHour}>
+                          <SelectTrigger className="flex-1 h-9">
+                            <SelectValue placeholder="Час" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {hours.map(hour => (
+                              <SelectItem key={`start-hour-${hour.value}`} value={hour.value}>
+                                {hour.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={startMinute} onValueChange={setStartMinute}>
+                          <SelectTrigger className="flex-1 h-9">
+                            <SelectValue placeholder="Мин" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {minutes.map(minute => (
+                              <SelectItem key={`start-min-${minute.value}`} value={minute.value}>
+                                {minute.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* End Date & Time */}
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <div className="relative w-1/2 pr-2">
+                      <label className="text-sm font-medium">Дата окончания</label>
+                      <div className="relative">
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-between text-left font-normal"
+                          onClick={() => setIsEndCalendarOpen(!isEndCalendarOpen)}
+                        >
+                          {endDate ? format(endDate, 'dd.MM.yyyy') : 'Выберите дату'}
+                        </Button>
+                        
+                        {isEndCalendarOpen && (
+                          <div className="absolute top-full left-0 z-50 mt-1 bg-white rounded-md shadow-md">
+                            <Calendar
+                              mode="single"
+                              selected={endDate}
+                              onSelect={(date) => {
+                                setEndDate(date);
+                                setIsEndCalendarOpen(false);
+                              }}
+                              initialFocus
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="w-1/2 pl-2 space-y-1">
+                      <label className="text-sm font-medium">Время окончания</label>
+                      <div className="flex gap-2">
+                        <Select value={endHour} onValueChange={setEndHour}>
+                          <SelectTrigger className="flex-1 h-9">
+                            <SelectValue placeholder="Час" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {hours.map(hour => (
+                              <SelectItem key={`end-hour-${hour.value}`} value={hour.value}>
+                                {hour.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={endMinute} onValueChange={setEndMinute}>
+                          <SelectTrigger className="flex-1 h-9">
+                            <SelectValue placeholder="Мин" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {minutes.map(minute => (
+                              <SelectItem key={`end-min-${minute.value}`} value={minute.value}>
+                                {minute.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Summary and Button */}
+                {startDate && endDate && (
+                  <div className="text-sm bg-muted/20 p-2 rounded">
+                    {format(startDate, 'dd.MM.yyyy')} {startHour}:{startMinute === '0' ? '00' : startMinute} - {format(endDate, 'dd.MM.yyyy')} {endHour}:{endMinute === '0' ? '00' : endMinute}
+                  </div>
+                )}
+              </div>
               
               <Button 
                 className="w-full mt-3" 
                 size="lg"
-                disabled={!bookingPeriod.startDate || !bookingPeriod.endDate}
+                disabled={!startDate || !endDate}
                 onClick={handleSearchClick}
               >
                 Поиск доступного оборудования

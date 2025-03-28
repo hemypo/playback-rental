@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -195,7 +194,7 @@ const BookingCalendar = ({
                   <Clock className="mr-2 h-3 w-3" />
                   <SelectValue placeholder="Час" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="select">
                   {hours.map(hour => (
                     <SelectItem key={`start-hour-${hour.value}`} value={hour.value}>
                       {hour.label}
@@ -213,7 +212,7 @@ const BookingCalendar = ({
                 )}>
                   <SelectValue placeholder="Мин" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="select">
                   {minutes.map(minute => (
                     <SelectItem key={`start-min-${minute.value}`} value={minute.value}>
                       {minute.label}
@@ -241,7 +240,7 @@ const BookingCalendar = ({
                   <Clock className="mr-2 h-3 w-3" />
                   <SelectValue placeholder="Час" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="select">
                   {hours.map(hour => (
                     <SelectItem key={`end-hour-${hour.value}`} value={hour.value}>
                       {hour.label}
@@ -259,7 +258,7 @@ const BookingCalendar = ({
                 )}>
                   <SelectValue placeholder="Мин" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="select">
                   {minutes.map(minute => (
                     <SelectItem key={`end-min-${minute.value}`} value={minute.value}>
                       {minute.label}
