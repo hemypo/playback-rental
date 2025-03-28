@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeftIcon, 
   CalendarIcon, 
@@ -22,6 +22,7 @@ import { formatDateRange } from '@/utils/dateUtils';
 import { useCartContext } from '@/hooks/useCart';
 import { createBooking } from '@/services/apiService';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Checkout = () => {
   const [loading, setLoading] = useState(false);
@@ -38,6 +39,8 @@ const Checkout = () => {
     getCartTotal, 
     clearCart 
   } = useCartContext();
+  
+  const navigate = useNavigate();
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -68,15 +71,26 @@ const Checkout = () => {
     try {
       // Create bookings for each cart item
       for (const item of cartItems) {
-        await createBooking({
-          productId: item.productId,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          startDate: item.startDate,
-          endDate: item.endDate,
-          notes: `Бронирование из корзины: ${item.title}`
-        });
+        // Insert directly into the database using Supabase
+        const { data, error } = await supabase
+          .from('bookings')
+          .insert({
+            product_id: item.productId,
+            customer_name: formData.name,
+            customer_email: formData.email,
+            customer_phone: formData.phone,
+            start_date: item.startDate.toISOString(),
+            end_date: item.endDate.toISOString(),
+            status: 'pending',
+            total_price: item.price * Math.ceil(
+              (item.endDate.getTime() - item.startDate.getTime()) / (1000 * 60 * 60 * 24)
+            ),
+            notes: `Бронирование из корзины: ${item.title}`
+          });
+        
+        if (error) {
+          throw error;
+        }
       }
       
       // Clear the cart after successful checkout
@@ -84,6 +98,12 @@ const Checkout = () => {
       
       // Show success
       setOrderComplete(true);
+      
+      // Record successful booking in analytics (example)
+      console.log('Booking completed successfully:', {
+        items: cartItems.length,
+        totalValue: getCartTotal()
+      });
     } catch (error) {
       console.error('Error during checkout:', error);
       toast({
@@ -167,7 +187,7 @@ const Checkout = () => {
                           <h3 className="font-medium mb-1">{item.title}</h3>
                           <p className="text-sm text-muted-foreground mb-2">
                             <CalendarIcon className="inline-block h-3 w-3 mr-1" />
-                            {formatDateRange(item.startDate, item.endDate)}
+                            {formatDateRange(item.startDate, item.endDate, true)}
                           </p>
                           <div className="flex justify-between items-center">
                             <p className="font-medium">{itemTotal.toFixed(2)} ₽</p>
@@ -204,6 +224,7 @@ const Checkout = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
+                      placeholder="Иван Иванов"
                     />
                   </div>
                   <div className="space-y-2">
@@ -214,6 +235,7 @@ const Checkout = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
+                      placeholder="email@example.com"
                     />
                   </div>
                 </div>
@@ -226,6 +248,7 @@ const Checkout = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
+                    placeholder="+7 (XXX) XXX-XX-XX"
                   />
                 </div>
               </div>
@@ -273,7 +296,7 @@ const Checkout = () => {
                     Отправка...
                   </>
                 ) : (
-                  'Бронирование подтверждено'
+                  'Подтвердить бронирование'
                 )}
               </Button>
             </CardFooter>

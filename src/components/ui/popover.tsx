@@ -22,9 +22,14 @@ const PopoverContent = React.forwardRef<
         className
       )}
       onInteractOutside={(e) => {
-        // Only close if specifically clicking outside, not on calendar content
+        // Only close if clicking outside, not on calendar content
         if (props.onInteractOutside) {
-          if (!(e.target as HTMLElement).closest('.react-day-picker')) {
+          const target = e.target as HTMLElement;
+          if (
+            !target.closest('.react-day-picker') && 
+            !target.closest('.select') &&
+            !target.closest('button')
+          ) {
             props.onInteractOutside(e);
           } else {
             e.preventDefault();

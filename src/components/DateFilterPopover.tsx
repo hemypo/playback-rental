@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,13 +27,15 @@ const DateFilterPopover = ({
   const [tempEndDate, setTempEndDate] = useState<Date | undefined>(endDate);
   
   // Update temp dates when props change
-  if (startDate !== tempStartDate) {
-    setTempStartDate(startDate);
-  }
-  
-  if (endDate !== tempEndDate) {
-    setTempEndDate(endDate);
-  }
+  useEffect(() => {
+    if (startDate !== tempStartDate) {
+      setTempStartDate(startDate);
+    }
+    
+    if (endDate !== tempEndDate) {
+      setTempEndDate(endDate);
+    }
+  }, [startDate, endDate]);
   
   const handleBookingChange = (booking: BookingPeriod) => {
     setTempStartDate(booking.startDate);
@@ -41,14 +43,16 @@ const DateFilterPopover = ({
     // Don't close the popover here, don't update parent state until Apply button is clicked
   };
   
-  const handleClear = () => {
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setTempStartDate(undefined);
     setTempEndDate(undefined);
     onDateRangeChange(undefined, undefined);
     setIsOpen(false);
   };
   
-  const handleApply = () => {
+  const handleApply = (e: React.MouseEvent) => {
+    e.stopPropagation();
     // Only update parent state and close popover when user explicitly applies
     onDateRangeChange(tempStartDate, tempEndDate);
     setIsOpen(false);
@@ -67,7 +71,7 @@ const DateFilterPopover = ({
           className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-12"
         >
           <CalendarIcon className="mr-2 h-5 w-5" />
-          {startDate && endDate ? formatDateRange(startDate, endDate) : "Выбрать время"}
+          {startDate && endDate ? formatDateRange(startDate, endDate, true) : "Выбрать время"}
         </Button>
       </PopoverTrigger>
       <PopoverContent 

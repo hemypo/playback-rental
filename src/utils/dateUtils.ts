@@ -1,5 +1,4 @@
-
-import { addDays, addHours, format, isSameDay, isWithinInterval } from 'date-fns';
+import { format, differenceInDays, isWithinInterval } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 export interface DateRange {
@@ -8,13 +7,58 @@ export interface DateRange {
 }
 
 /**
- * Formats a date range for display
+ * Format a date range as a string
  */
-export const formatDateRange = (start: Date, end: Date): string => {
-  if (isSameDay(start, end)) {
-    return `${format(start, 'dd.MM.yyyy')} ${format(start, 'HH:00')} - ${format(end, 'HH:00')}`;
+export const formatDateRange = (start: Date, end: Date, showTime: boolean = false): string => {
+  const sameDay = start.getDate() === end.getDate() && 
+                  start.getMonth() === end.getMonth() && 
+                  start.getFullYear() === end.getFullYear();
+  
+  if (showTime) {
+    // Format with times
+    if (sameDay) {
+      return `${format(start, 'dd.MM.yyyy')} ${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`;
+    } else {
+      return `${format(start, 'dd.MM.yyyy HH:mm')} - ${format(end, 'dd.MM.yyyy HH:mm')}`;
+    }
+  } else {
+    // Format dates only
+    if (sameDay) {
+      return format(start, 'dd MMMM yyyy', { locale: ru });
+    } else {
+      const sameMonth = start.getMonth() === end.getMonth() && 
+                         start.getFullYear() === end.getFullYear();
+      
+      if (sameMonth) {
+        return `${format(start, 'dd')} - ${format(end, 'dd MMMM yyyy', { locale: ru })}`;
+      } else {
+        return `${format(start, 'dd.MM.yyyy')} - ${format(end, 'dd.MM.yyyy')}`;
+      }
+    }
   }
-  return `${format(start, 'dd.MM.yyyy HH:00')} - ${format(end, 'dd.MM.yyyy HH:00')}`;
+};
+
+/**
+ * Calculate the number of days between two dates
+ */
+export const calculateDaysDifference = (start: Date, end: Date): number => {
+  return differenceInDays(end, start) + 1; // Include both start and end days
+};
+
+/**
+ * Check if a date range is available (not conflicting with booked periods)
+ */
+export const isDateRangeAvailable = (
+  start: Date, 
+  end: Date, 
+  bookedPeriods: { start: Date; end: Date }[]
+): boolean => {
+  // Check if the selected date range overlaps with any booked period
+  return !bookedPeriods.some(period => 
+    isWithinInterval(start, { start: period.start, end: period.end }) ||
+    isWithinInterval(end, { start: period.start, end: period.end }) ||
+    (start <= period.start && end >= period.end)
+  );
 };
 
 /**
@@ -22,23 +66,6 @@ export const formatDateRange = (start: Date, end: Date): string => {
  */
 export const formatDateRu = (date: Date, formatStr: string): string => {
   return format(date, formatStr, { locale: ru });
-};
-
-/**
- * Checks if a date range overlaps with any of the provided booked ranges
- */
-export const isDateRangeAvailable = (
-  start: Date,
-  end: Date,
-  bookedRanges: DateRange[]
-): boolean => {
-  // Check if the requested period overlaps with any booked period
-  return !bookedRanges.some(
-    (bookedRange) =>
-      isWithinInterval(start, { start: bookedRange.start, end: bookedRange.end }) ||
-      isWithinInterval(end, { start: bookedRange.start, end: bookedRange.end }) ||
-      (start < bookedRange.start && end > bookedRange.end)
-  );
 };
 
 /**
