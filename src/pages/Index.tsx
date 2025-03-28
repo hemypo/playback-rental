@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -15,9 +14,7 @@ const Index = () => {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [startHour, setStartHour] = useState("9");
-  const [startMinute, setStartMinute] = useState("0");
   const [endHour, setEndHour] = useState("18");
-  const [endMinute, setEndMinute] = useState("0");
   const [isStartCalendarOpen, setIsStartCalendarOpen] = useState(false);
   const [isEndCalendarOpen, setIsEndCalendarOpen] = useState(false);
 
@@ -32,24 +29,19 @@ const Index = () => {
     queryFn: () => getCategories(),
   });
 
-  // Generate hour and minute options
+  // Generate hour options (full hours only)
   const hours = Array.from({ length: 24 }, (_, i) => ({
     value: i.toString(),
-    label: i < 10 ? `0${i}` : `${i}`
-  }));
-  
-  const minutes = [0, 15, 30, 45].map(m => ({
-    value: m.toString(),
-    label: m < 10 ? `0${m}` : `${m}`
+    label: i < 10 ? `0${i}:00` : `${i}:00`
   }));
 
   const handleSearchClick = () => {
     if (startDate && endDate) {
       const fullStartDate = new Date(startDate);
-      fullStartDate.setHours(parseInt(startHour), parseInt(startMinute), 0);
+      fullStartDate.setHours(parseInt(startHour), 0, 0);
       
       const fullEndDate = new Date(endDate);
-      fullEndDate.setHours(parseInt(endHour), parseInt(endMinute), 0);
+      fullEndDate.setHours(parseInt(endHour), 0, 0);
       
       navigate('/catalog', { 
         state: { 
@@ -116,32 +108,18 @@ const Index = () => {
                     
                     <div className="w-1/2 pl-2 space-y-1">
                       <label className="text-sm font-medium">Время начала</label>
-                      <div className="flex gap-2">
-                        <Select value={startHour} onValueChange={setStartHour}>
-                          <SelectTrigger className="flex-1 h-9">
-                            <SelectValue placeholder="Час" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {hours.map(hour => (
-                              <SelectItem key={`start-hour-${hour.value}`} value={hour.value}>
-                                {hour.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Select value={startMinute} onValueChange={setStartMinute}>
-                          <SelectTrigger className="flex-1 h-9">
-                            <SelectValue placeholder="Мин" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {minutes.map(minute => (
-                              <SelectItem key={`start-min-${minute.value}`} value={minute.value}>
-                                {minute.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <Select value={startHour} onValueChange={setStartHour}>
+                        <SelectTrigger className="flex-1 h-9">
+                          <SelectValue placeholder="Час" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {hours.map(hour => (
+                            <SelectItem key={`start-hour-${hour.value}`} value={hour.value}>
+                              {hour.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
@@ -178,32 +156,18 @@ const Index = () => {
                     
                     <div className="w-1/2 pl-2 space-y-1">
                       <label className="text-sm font-medium">Время окончания</label>
-                      <div className="flex gap-2">
-                        <Select value={endHour} onValueChange={setEndHour}>
-                          <SelectTrigger className="flex-1 h-9">
-                            <SelectValue placeholder="Час" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {hours.map(hour => (
-                              <SelectItem key={`end-hour-${hour.value}`} value={hour.value}>
-                                {hour.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Select value={endMinute} onValueChange={setEndMinute}>
-                          <SelectTrigger className="flex-1 h-9">
-                            <SelectValue placeholder="Мин" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {minutes.map(minute => (
-                              <SelectItem key={`end-min-${minute.value}`} value={minute.value}>
-                                {minute.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <Select value={endHour} onValueChange={setEndHour}>
+                        <SelectTrigger className="flex-1 h-9">
+                          <SelectValue placeholder="Час" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {hours.map(hour => (
+                            <SelectItem key={`end-hour-${hour.value}`} value={hour.value}>
+                              {hour.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
@@ -211,7 +175,7 @@ const Index = () => {
                 {/* Summary and Button */}
                 {startDate && endDate && (
                   <div className="text-sm bg-muted/20 p-2 rounded">
-                    {format(startDate, 'dd.MM.yyyy')} {startHour}:{startMinute === '0' ? '00' : startMinute} - {format(endDate, 'dd.MM.yyyy')} {endHour}:{endMinute === '0' ? '00' : endMinute}
+                    {format(startDate, 'dd.MM.yyyy')} {startHour}:00 - {format(endDate, 'dd.MM.yyyy')} {endHour}:00
                   </div>
                 )}
               </div>

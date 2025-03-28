@@ -75,7 +75,7 @@ const DateFilterPopover = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="p-0 w-full max-w-[420px]" 
+        className="p-0 w-auto min-w-[420px]" 
         align="start"
         onClickCapture={handlePopoverInteraction}
         sideOffset={8}
