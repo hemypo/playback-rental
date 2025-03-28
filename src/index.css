@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -150,48 +151,24 @@
   }
   
   .animate-in {
-    opacity: 0;
-    animation: fade-in 0.5s ease-out forwards;
+    @apply opacity-100 animate-fade-in;
   }
-
+  
   .animate-in-up {
-    opacity: 0;
-    animation: slide-up 0.5s ease-out forwards;
+    @apply opacity-100 animate-slide-up;
   }
-
+  
   .animate-in-down {
-    opacity: 0;
-    animation: slide-down 0.5s ease-out forwards;
+    @apply opacity-100 animate-slide-down;
   }
-
+  
   .animate-in-scale {
-    opacity: 0;
-    animation: scale-in 0.5s ease-out forwards;
+    @apply opacity-100 animate-scale-in;
   }
 
   /* Fix for data-state=open animation opacity issue */
   .data-\[state\=open\]\:animate-in[data-state=open] {
-    opacity: 1;
-  }
-
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes slide-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes slide-down {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes scale-in {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    @apply opacity-100;
   }
 
   .smooth-transition {
