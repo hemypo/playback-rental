@@ -57,12 +57,15 @@ const Index = () => {
               Современная и профессиональная фото- и видеотехника, включая новейшие модели и классические решения, доступные для аренды на гибких и выгодных условиях.
             </p>
             
-            <div className="w-full glass-panel p-6 rounded-xl">
-              <h2 className="text-lg font-medium mb-4">Найдите доступное оборудование</h2>
-              <BookingCalendar onBookingChange={handleBookingChange} />
+            <div className="w-full glass-panel p-4 rounded-xl">
+              <h2 className="text-lg font-medium mb-3">Найдите доступное оборудование</h2>
+              <BookingCalendar 
+                onBookingChange={handleBookingChange} 
+                isCompact={true} // Use compact version here
+              />
               
               <Button 
-                className="w-full mt-4" 
+                className="w-full mt-3" 
                 size="lg"
                 disabled={!bookingPeriod.startDate || !bookingPeriod.endDate}
                 onClick={handleSearchClick}

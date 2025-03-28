@@ -1,4 +1,5 @@
-import { format, differenceInDays, isWithinInterval } from 'date-fns';
+
+import { format, differenceInDays, isWithinInterval, addDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 export interface DateRange {

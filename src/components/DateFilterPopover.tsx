@@ -75,17 +75,18 @@ const DateFilterPopover = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-auto p-0" 
+        className="w-auto p-0 min-w-[320px] max-w-[100vw]" 
         align="start"
         onClickCapture={handlePopoverInteraction}
       >
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 w-full">
           <h3 className="font-medium">Выберите дату и время</h3>
           
           <BookingCalendar
             onBookingChange={handleBookingChange}
             initialStartDate={tempStartDate}
             initialEndDate={tempEndDate}
+            isCompact={false} // Use full size in popover
           />
           
           <div className="pt-2 flex gap-2">
