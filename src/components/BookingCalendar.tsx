@@ -22,7 +22,7 @@ const BookingCalendar = ({
   initialEndDate,
   bookedPeriods,
 }: BookingCalendarProps) => {
-  const [date, setDate] = useState<Date | undefined>(initialStartDate);
+  const [date, setDate] = useState<Date | undefined>(initialStartDate || new Date());
   const [startDate, setStartDate] = useState<Date | undefined>(initialStartDate);
   const [endDate, setEndDate] = useState<Date | undefined>(initialEndDate);
   const [isSelectingRange, setIsSelectingRange] = useState(false);
@@ -78,14 +78,22 @@ const BookingCalendar = ({
     onBookingChange(newBooking);
   };
   
+  // Stop event propagation to prevent calendar clicks from closing the popover
+  const handleCalendarInteraction = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+  
   return (
-    <div className="border rounded-md p-2">
+    <div className="border rounded-md p-2" onClick={handleCalendarInteraction}>
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setDate(subMonths(date || new Date(), 1))}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDate(subMonths(date || new Date(), 1));
+            }}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             Предыдущий
@@ -93,7 +101,10 @@ const BookingCalendar = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setDate(addMonths(date || new Date(), 1))}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDate(addMonths(date || new Date(), 1));
+            }}
           >
             Следующий
             <CalendarIcon className="ml-2 h-4 w-4" />

@@ -23,20 +23,40 @@ const DateFilterPopover = ({
   onDateRangeChange,
 }: DateFilterPopoverProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [tempStartDate, setTempStartDate] = useState<Date | undefined>(startDate);
+  const [tempEndDate, setTempEndDate] = useState<Date | undefined>(endDate);
+  
+  // Update temp dates when props change
+  if (startDate !== tempStartDate) {
+    setTempStartDate(startDate);
+  }
+  
+  if (endDate !== tempEndDate) {
+    setTempEndDate(endDate);
+  }
   
   const handleBookingChange = (booking: BookingPeriod) => {
-    onDateRangeChange(booking.startDate, booking.endDate);
-    // Don't close the popover here, let the user confirm with Apply button
+    setTempStartDate(booking.startDate);
+    setTempEndDate(booking.endDate);
+    // Don't close the popover here, don't update parent state until Apply button is clicked
   };
   
   const handleClear = () => {
+    setTempStartDate(undefined);
+    setTempEndDate(undefined);
     onDateRangeChange(undefined, undefined);
     setIsOpen(false);
   };
   
   const handleApply = () => {
-    // Only close the popover when the user explicitly applies the selection
+    // Only update parent state and close popover when user explicitly applies
+    onDateRangeChange(tempStartDate, tempEndDate);
     setIsOpen(false);
+  };
+  
+  // Prevent popover from closing when clicking within the calendar
+  const handlePopoverInteraction = (e: React.MouseEvent) => {
+    e.stopPropagation();
   };
   
   return (
@@ -50,14 +70,18 @@ const DateFilterPopover = ({
           {startDate && endDate ? formatDateRange(startDate, endDate) : "Выбрать время"}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent 
+        className="w-auto p-0" 
+        align="start"
+        onClickCapture={handlePopoverInteraction}
+      >
         <div className="p-4 space-y-4">
           <h3 className="font-medium">Выберите дату и время</h3>
           
           <BookingCalendar
             onBookingChange={handleBookingChange}
-            initialStartDate={startDate}
-            initialEndDate={endDate}
+            initialStartDate={tempStartDate}
+            initialEndDate={tempEndDate}
           />
           
           <div className="pt-2 flex gap-2">
