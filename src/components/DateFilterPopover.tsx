@@ -75,9 +75,10 @@ const DateFilterPopover = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-auto p-0 min-w-[320px] max-w-[100vw]" 
+        className="w-auto p-0 min-w-[320px] max-w-[calc(100vw-2rem)]" 
         align="start"
         onClickCapture={handlePopoverInteraction}
+        sideOffset={8}
       >
         <div className="p-4 space-y-4 w-full">
           <h3 className="font-medium">Выберите дату и время</h3>
@@ -87,6 +88,7 @@ const DateFilterPopover = ({
             initialStartDate={tempStartDate}
             initialEndDate={tempEndDate}
             isCompact={false} // Use full size in popover
+            className="w-full"
           />
           
           <div className="pt-2 flex gap-2">

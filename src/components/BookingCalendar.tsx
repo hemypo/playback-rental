@@ -21,6 +21,7 @@ interface BookingCalendarProps {
   initialEndDate?: Date;
   bookedPeriods?: BookingPeriod[];
   isCompact?: boolean; // New prop to control compact view
+  className?: string; // Add className prop
 }
 
 const BookingCalendar = ({
@@ -29,6 +30,7 @@ const BookingCalendar = ({
   initialEndDate,
   bookedPeriods,
   isCompact = false, // Default to full view
+  className,
 }: BookingCalendarProps) => {
   const [date, setDate] = useState<Date | undefined>(initialStartDate || new Date());
   const [startDate, setStartDate] = useState<Date | undefined>(initialStartDate);
@@ -113,8 +115,9 @@ const BookingCalendar = ({
   
   return (
     <div className={cn(
-      "border rounded-md p-2 w-full", 
-      isCompact ? "space-y-2" : "space-y-4"
+      "border rounded-md p-2", 
+      isCompact ? "space-y-2" : "space-y-4",
+      className
     )} onClick={handleCalendarInteraction}>
       <div className={cn(
         "flex items-center justify-between", 
@@ -166,7 +169,7 @@ const BookingCalendar = ({
         }}
         onSelect={handleSelectEnd}
         className={cn(
-          "border-0 p-0 pointer-events-auto w-full",
+          "border-0 p-0 pointer-events-auto w-full max-w-none",
           isCompact && "scale-[0.85] origin-top"
         )}
       />
