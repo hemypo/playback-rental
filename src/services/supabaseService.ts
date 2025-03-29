@@ -78,6 +78,32 @@ export const deleteProduct = async (id: string) => {
 };
 
 /**
+ * Upload product image
+ */
+export const uploadProductImage = async (file: File) => {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `products/${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from('products')
+      .upload(filePath, file);
+
+    if (error) throw error;
+
+    const { data: publicUrlData } = supabase.storage
+      .from('products')
+      .getPublicUrl(filePath);
+
+    return publicUrlData.publicUrl;
+  } catch (error) {
+    console.error('Error uploading product image:', error);
+    throw error;
+  }
+};
+
+/**
  * Get all categories
  */
 export const getCategories = async () => {

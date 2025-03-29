@@ -10,7 +10,8 @@ import {
   LogOut,
   FileUp,
   FileDown,
-  Plus
+  Plus,
+  Upload
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -72,6 +73,7 @@ const Admin = () => {
     available: true,
     quantity: 1
   });
+  const [productImage, setProductImage] = useState<File | null>(null);
 
   // CSV state
   const [csvDialogOpen, setCsvDialogOpen] = useState(false);
@@ -109,18 +111,45 @@ const Admin = () => {
   };
 
   // Function to format booking status
-  const formatStatus = (status: string): { label: string; variant: "default" | "destructive" | "outline" | "secondary" } => {
+  const formatStatus = (status: string): { label: string; variant: "default" | "destructive" | "outline" | "secondary"; color: string } => {
     switch (status) {
       case 'confirmed':
-        return { label: 'Подтверждено', variant: 'default' };
+        return { 
+          label: 'Подтверждено', 
+          variant: 'default',
+          color: 'bg-green-500'
+        };
       case 'pending':
-        return { label: 'В ожидании', variant: 'secondary' };
+        return { 
+          label: 'В ожидании', 
+          variant: 'secondary',
+          color: 'bg-yellow-400'
+        };
       case 'cancelled':
-        return { label: 'Отменено', variant: 'destructive' };
+        return { 
+          label: 'Отменено', 
+          variant: 'destructive',
+          color: 'bg-red-500'
+        };
       case 'completed':
-        return { label: 'Завершено', variant: 'outline' };
+        return { 
+          label: 'Завершено', 
+          variant: 'outline',
+          color: 'bg-blue-500'
+        };
       default:
-        return { label: status, variant: 'outline' };
+        return { 
+          label: status, 
+          variant: 'outline',
+          color: 'bg-gray-400'
+        };
+    }
+  };
+
+  // Handle file upload
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setProductImage(e.target.files[0]);
     }
   };
 
@@ -149,6 +178,7 @@ const Admin = () => {
         quantity: 1
       });
     }
+    setProductImage(null);
     setProductDialogOpen(true);
   };
 
@@ -161,6 +191,28 @@ const Admin = () => {
 
   const handleProductSubmit = async () => {
     try {
+      let imageUrl = productValues.imageUrl;
+
+      // If there's a new image file, upload it to Supabase Storage
+      if (productImage) {
+        const fileExt = productImage.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `products/${fileName}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(filePath, productImage);
+
+        if (uploadError) throw uploadError;
+
+        // Get the public URL
+        const { data: publicUrlData } = supabase.storage
+          .from('products')
+          .getPublicUrl(filePath);
+
+        imageUrl = publicUrlData.publicUrl;
+      }
+
       if (editingProduct) {
         // Update existing product
         await supabaseService.updateProduct(editingProduct.id, {
@@ -168,7 +220,7 @@ const Admin = () => {
           description: productValues.description,
           price: productValues.price,
           category: productValues.category,
-          imageUrl: productValues.imageUrl,
+          imageUrl: imageUrl,
           available: productValues.available,
           quantity: productValues.quantity
         });
@@ -183,7 +235,7 @@ const Admin = () => {
           description: productValues.description,
           price: productValues.price,
           category: productValues.category,
-          imageUrl: productValues.imageUrl,
+          imageUrl: imageUrl,
           available: productValues.available,
           quantity: productValues.quantity
         });
@@ -434,7 +486,8 @@ const Admin = () => {
                               <TableCell>{product.category}</TableCell>
                               <TableCell>{product.price.toLocaleString()} ₽</TableCell>
                               <TableCell>
-                                <Badge variant={product.available ? "default" : "destructive"}>
+                                <Badge variant={product.available ? "default" : "destructive"} 
+                                       className={product.available ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}>
                                   {product.available ? 'Доступен' : 'Недоступен'}
                                 </Badge>
                               </TableCell>
@@ -502,15 +555,17 @@ const Admin = () => {
                               </TableCell>
                               <TableCell>{getProductTitle(booking.productId)}</TableCell>
                               <TableCell>
-                                <div>
+                                <div className="flex items-center">
                                   {format(new Date(booking.startDate), 'dd MMM', { locale: ru })} {format(new Date(booking.startDate), 'HH:mm')}
-                                </div>
-                                <div>
+                                  <span className="mx-1">-</span>
                                   {format(new Date(booking.endDate), 'dd MMM', { locale: ru })} {format(new Date(booking.endDate), 'HH:mm')}
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <Badge variant={formatStatus(booking.status).variant}>
+                                <Badge 
+                                  variant={formatStatus(booking.status).variant}
+                                  className={formatStatus(booking.status).color}
+                                >
                                   {formatStatus(booking.status).label}
                                 </Badge>
                               </TableCell>
@@ -606,6 +661,31 @@ const Admin = () => {
                 onChange={(e) => handleProductChange('imageUrl', e.target.value)}
                 className="col-span-3"
               />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="imageFile" className="text-right">
+                Загрузить изображение
+              </Label>
+              <div className="col-span-3">
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="imageFile"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="flex-1"
+                  />
+                  <Button variant="outline" onClick={() => document.getElementById('imageFile')?.click()} type="button">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Обзор
+                  </Button>
+                </div>
+                {productImage && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Выбрано: {productImage.name}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="quantity" className="text-right">
@@ -711,7 +791,14 @@ const Admin = () => {
               <div className="grid grid-cols-1 gap-2">
                 <h3 className="font-medium">Дополнительная информация</h3>
                 <div className="bg-muted/30 p-3 rounded-md">
-                  <p><strong>Статус:</strong> {formatStatus(selectedBooking.status).label}</p>
+                  <p><strong>Статус:</strong> 
+                    <Badge 
+                      variant={formatStatus(selectedBooking.status).variant}
+                      className={`ml-2 ${formatStatus(selectedBooking.status).color}`}
+                    >
+                      {formatStatus(selectedBooking.status).label}
+                    </Badge>
+                  </p>
                   <p><strong>Сумма:</strong> {selectedBooking.totalPrice.toLocaleString()} ₽</p>
                   {selectedBooking.notes && <p><strong>Примечания:</strong> {selectedBooking.notes}</p>}
                 </div>

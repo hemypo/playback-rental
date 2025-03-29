@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { addDays, format, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { addDays, format, isWithinInterval, startOfDay, endOfDay, isSameDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
   CalendarIcon,
@@ -101,26 +101,6 @@ const AdminCalendar = () => {
     setStartDate(new Date());
   };
 
-  // Check if booking is active on a specific day
-  const isBookingActiveOnDay = (booking: BookingPeriod, day: Date) => {
-    const dayStart = startOfDay(day);
-    const dayEnd = endOfDay(day);
-    return isWithinInterval(dayStart, {
-      start: startOfDay(new Date(booking.startDate)),
-      end: endOfDay(new Date(booking.endDate))
-    }) || isWithinInterval(dayEnd, {
-      start: startOfDay(new Date(booking.startDate)),
-      end: endOfDay(new Date(booking.endDate))
-    });
-  };
-
-  // Get bookings for a product on a specific day
-  const getBookingsForProductOnDay = (productId: string, day: Date) => {
-    return extendedBookings.filter(booking => 
-      booking.productId === productId && isBookingActiveOnDay(booking, day)
-    );
-  };
-
   // Get status color
   const getStatusColor = (status: BookingPeriod['status']) => {
     switch (status) {
@@ -135,6 +115,49 @@ const AdminCalendar = () => {
       default:
         return 'bg-gray-400';
     }
+  };
+
+  // Calculate booking span (how many days it spans in the visible range)
+  const calculateBookingSpan = (booking: BookingPeriod) => {
+    const bookingStart = new Date(booking.startDate);
+    const bookingEnd = new Date(booking.endDate);
+    
+    // Find first visible day that contains the booking
+    let firstVisibleDayIndex = days.findIndex(day => 
+      isWithinInterval(day, { start: startOfDay(bookingStart), end: endOfDay(bookingEnd) }) ||
+      isSameDay(day, bookingStart) || isSameDay(day, bookingEnd)
+    );
+    
+    if (firstVisibleDayIndex === -1) return null;
+    
+    // If booking starts before visible range, adjust
+    if (bookingStart < startOfDay(days[0])) {
+      firstVisibleDayIndex = 0;
+    }
+    
+    // Calculate how many days the booking spans in visible range
+    let span = 1;
+    for (let i = firstVisibleDayIndex + 1; i < days.length; i++) {
+      if (days[i] <= endOfDay(bookingEnd)) {
+        span++;
+      } else {
+        break;
+      }
+    }
+    
+    return { index: firstVisibleDayIndex, span };
+  };
+
+  // Get active bookings for a product
+  const getActiveBookingsForProduct = (productId: string) => {
+    return extendedBookings
+      .filter(booking => booking.productId === productId)
+      .map(booking => {
+        const span = calculateBookingSpan(booking);
+        if (!span) return null;
+        return { booking, ...span };
+      })
+      .filter(Boolean);
   };
 
   if (isLoadingBookings || isLoadingProducts) {
@@ -248,72 +271,80 @@ const AdminCalendar = () => {
                 </td>
               </tr>
             ) : (
-              filteredProducts.map((product) => (
-                <tr key={product.id} className="border-t hover:bg-muted/30">
-                  <td className="sticky left-0 z-10 bg-card p-3 font-medium border-r">
-                    <div className="flex items-center gap-2">
-                      {product.imageUrl && (
-                        <div 
-                          className="w-8 h-8 rounded bg-center bg-cover flex-shrink-0"
-                          style={{ backgroundImage: `url(${product.imageUrl})` }}
-                        />
-                      )}
-                      <div>
-                        <div className="truncate max-w-[150px]">{product.title}</div>
-                        <div className="text-xs text-muted-foreground">{product.category}</div>
-                      </div>
-                    </div>
-                  </td>
-                  
-                  {days.map((day, dayIndex) => {
-                    const bookingsOnDay = getBookingsForProductOnDay(product.id, day);
-                    return (
-                      <td 
-                        key={dayIndex} 
-                        className={`p-2 border-r ${
-                          day.getDay() === 0 || day.getDay() === 6 ? 'bg-muted/30' : ''
-                        } ${bookingsOnDay.length > 0 ? 'relative' : ''}`}
-                      >
-                        {bookingsOnDay.length > 0 ? (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className={`h-full w-full flex items-center justify-center cursor-default`}>
-                                  <div className={`w-full h-6 ${getStatusColor(bookingsOnDay[0].status)} rounded-sm flex items-center justify-center text-white text-xs`}>
-                                    {bookingsOnDay[0].customerName.split(' ')[0]}
-                                  </div>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent className="p-0">
-                                <div className="p-3 max-w-[250px]">
-                                  <div className="font-medium mb-1">{bookingsOnDay[0].customerName}</div>
-                                  <div className="text-xs mb-2">
-                                    {format(new Date(bookingsOnDay[0].startDate), 'dd.MM.yyyy')} - {format(new Date(bookingsOnDay[0].endDate), 'dd.MM.yyyy')}
-                                  </div>
-                                  <div className="flex justify-between items-center">
-                                    <div className="text-xs text-muted-foreground">{bookingsOnDay[0].customerPhone}</div>
-                                    <Badge variant="outline">
-                                      {bookingsOnDay[0].status === 'confirmed' 
-                                        ? 'Подтверждено' 
-                                        : bookingsOnDay[0].status === 'pending' 
-                                        ? 'В ожидании'
-                                        : bookingsOnDay[0].status === 'cancelled'
-                                        ? 'Отменено'
-                                        : 'Завершено'}
-                                    </Badge>
-                                  </div>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ) : (
-                          <div className="h-6"></div> // Empty cell placeholder
+              filteredProducts.map((product) => {
+                const productBookings = getActiveBookingsForProduct(product.id);
+                
+                return (
+                  <tr key={product.id} className="border-t hover:bg-muted/30">
+                    <td className="sticky left-0 z-10 bg-card p-3 font-medium border-r">
+                      <div className="flex items-center gap-2">
+                        {product.imageUrl && (
+                          <div 
+                            className="w-8 h-8 rounded bg-center bg-cover flex-shrink-0"
+                            style={{ backgroundImage: `url(${product.imageUrl})` }}
+                          />
                         )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))
+                        <div>
+                          <div className="truncate max-w-[150px]">{product.title}</div>
+                          <div className="text-xs text-muted-foreground">{product.category}</div>
+                        </div>
+                      </div>
+                    </td>
+                    
+                    {/* Render booking spans across days */}
+                    <td colSpan={days.length} className="relative p-0">
+                      <div className="h-12 relative w-full">
+                        {productBookings?.map((bookingData, idx) => {
+                          if (!bookingData) return null;
+                          const { booking, index, span } = bookingData;
+                          
+                          const leftPosition = (index / days.length) * 100;
+                          const width = (span / days.length) * 100;
+                          
+                          return (
+                            <TooltipProvider key={booking.id}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div 
+                                    className={`absolute h-6 ${getStatusColor(booking.status)} rounded-sm flex items-center justify-center text-white text-xs whitespace-nowrap overflow-hidden px-2`}
+                                    style={{ 
+                                      left: `${leftPosition}%`, 
+                                      width: `${width}%`,
+                                      top: '12px'
+                                    }}
+                                  >
+                                    {booking.customerName.split(' ')[0]}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="p-0">
+                                  <div className="p-3 max-w-[250px]">
+                                    <div className="font-medium mb-1">{booking.customerName}</div>
+                                    <div className="text-xs mb-2">
+                                      {format(new Date(booking.startDate), 'dd.MM.yyyy')} - {format(new Date(booking.endDate), 'dd.MM.yyyy')}
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                      <div className="text-xs text-muted-foreground">{booking.customerPhone}</div>
+                                      <Badge variant="outline">
+                                        {booking.status === 'confirmed' 
+                                          ? 'Подтверждено' 
+                                          : booking.status === 'pending' 
+                                          ? 'В ожидании'
+                                          : booking.status === 'cancelled'
+                                          ? 'Отменено'
+                                          : 'Завершено'}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          );
+                        })}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

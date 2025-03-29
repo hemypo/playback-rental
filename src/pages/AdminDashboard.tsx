@@ -1,6 +1,5 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import { 
   BarChart3, 
   DollarSign, 
@@ -14,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { getProducts, getBookings } from '@/services/apiService';
 import { BookingPeriod } from '@/types/product';
+import { Badge } from '@/components/ui/badge';
 
 const AdminDashboard = () => {
   const { data: products } = useQuery({
@@ -34,10 +34,28 @@ const AdminDashboard = () => {
     (booking: BookingPeriod) => booking.status === 'confirmed' && new Date(booking.endDate) >= new Date()
   ).length || 0;
   
+  // Count only confirmed bookings for revenue
   const totalRevenue = bookings?.reduce(
-    (sum: number, booking: BookingPeriod) => sum + (booking.totalPrice || 0), 
+    (sum: number, booking: BookingPeriod) => 
+      booking.status === 'confirmed' ? sum + (booking.totalPrice || 0) : sum, 
     0
   ) || 0;
+
+  // Format booking status with correct colors
+  const formatStatus = (status: string): string => {
+    switch (status) {
+      case 'confirmed':
+        return 'bg-green-500 text-white';
+      case 'pending':
+        return 'bg-yellow-400 text-black';
+      case 'cancelled':
+        return 'bg-red-500 text-white';
+      case 'completed':
+        return 'bg-blue-500 text-white';
+      default:
+        return 'bg-gray-400 text-black';
+    }
+  };
 
   return (
     <div>
@@ -47,11 +65,6 @@ const AdminDashboard = () => {
           <p className="text-muted-foreground">
             Обзор статистики проката и последних заявок
           </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Button asChild>
-            <Link to="/admin?tab=products">Управление товарами</Link>
-          </Button>
         </div>
       </div>
       
@@ -145,19 +158,15 @@ const AdminDashboard = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-medium">{booking.totalPrice.toLocaleString()} ₽</p>
-                        <div className={`text-xs px-2 py-0.5 rounded-full inline-block ${
-                          booking.status === 'confirmed' 
-                            ? 'bg-green-100 text-green-800' 
-                            : booking.status === 'pending' 
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
+                        <Badge className={formatStatus(booking.status)}>
                           {booking.status === 'confirmed' 
                             ? 'Подтверждено' 
                             : booking.status === 'pending' 
                             ? 'В ожидании'
-                            : 'Отменено'}
-                        </div>
+                            : booking.status === 'cancelled'
+                            ? 'Отменено'
+                            : 'Завершено'}
+                        </Badge>
                       </div>
                     </div>
                   ))}

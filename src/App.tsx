@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { seedDatabase } from "./utils/seedDatabase";
 import { CartProvider } from "./hooks/useCart";
+import { supabase } from "./integrations/supabase/client";
 
 // Pages
 import Index from "./pages/Index";
@@ -42,6 +43,24 @@ const App = () => {
   // Seed the database with initial data if empty
   useEffect(() => {
     seedDatabase().catch(console.error);
+
+    // Create products storage bucket if it doesn't exist
+    const createProductsBucket = async () => {
+      // Check if bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(bucket => bucket.name === 'products');
+      
+      if (!bucketExists) {
+        await supabase.storage.createBucket('products', {
+          public: true,
+          allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+          fileSizeLimit: 5 * 1024 * 1024, // 5MB
+        });
+        console.log("Created products storage bucket");
+      }
+    };
+    
+    createProductsBucket().catch(console.error);
   }, []);
 
   return (
