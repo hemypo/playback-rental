@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, useLocation } from 'react-router-dom';
@@ -43,6 +44,7 @@ const Catalog = () => {
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', search, category, startDate?.toISOString(), endDate?.toISOString()],
     queryFn: async () => {
+      // Always use getAvailableProducts when dates are selected, otherwise fetch all products
       if (startDate && endDate) {
         return supabaseService.getAvailableProducts(startDate, endDate);
       } else {
@@ -89,6 +91,24 @@ const Catalog = () => {
     setEndDate(undefined);
     setSearchParams({});
   };
+  
+  // Filter products based on search and category even after getting availability filtered products
+  const filteredProducts = products?.filter(product => {
+    let matchesSearch = true;
+    let matchesCategory = true;
+    
+    if (search) {
+      const searchLower = search.toLowerCase();
+      matchesSearch = product.title.toLowerCase().includes(searchLower) || 
+                     product.description.toLowerCase().includes(searchLower);
+    }
+    
+    if (category) {
+      matchesCategory = product.category === category;
+    }
+    
+    return matchesSearch && matchesCategory;
+  });
   
   return (
     <div className="min-h-screen">
@@ -147,7 +167,7 @@ const Catalog = () => {
                 <div key={i} className="animate-pulse h-80 rounded-xl bg-muted"></div>
               ))}
             </div>
-          ) : products?.length === 0 ? (
+          ) : filteredProducts?.length === 0 ? (
             <div className="text-center py-16">
               <SlidersIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-2xl font-medium mb-2">Ничего не найдено</h3>
@@ -158,7 +178,7 @@ const Catalog = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products?.map((product) => (
+              {filteredProducts?.map((product) => (
                 <ProductCard 
                   key={product.id} 
                   product={product}

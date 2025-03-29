@@ -1,4 +1,3 @@
-
 import { format, differenceInDays, isWithinInterval, addDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -54,12 +53,37 @@ export const isDateRangeAvailable = (
   end: Date, 
   bookedPeriods: { start: Date; end: Date }[]
 ): boolean => {
+  // If there are no booked periods, the date range is available
+  if (!bookedPeriods || bookedPeriods.length === 0) {
+    return true;
+  }
+  
   // Check if the selected date range overlaps with any booked period
-  return !bookedPeriods.some(period => 
-    isWithinInterval(start, { start: period.start, end: period.end }) ||
-    isWithinInterval(end, { start: period.start, end: period.end }) ||
-    (start <= period.start && end >= period.end)
-  );
+  for (const period of bookedPeriods) {
+    // Check for overlap between the two date ranges
+    const periodStart = new Date(period.start);
+    const periodEnd = new Date(period.end);
+    
+    // Convert to milliseconds for easier comparison
+    const startMs = start.getTime();
+    const endMs = end.getTime();
+    const bookedStartMs = periodStart.getTime();
+    const bookedEndMs = periodEnd.getTime();
+    
+    // Check if date ranges overlap
+    // An overlap occurs when start1 <= end2 AND start2 <= end1
+    if (startMs <= bookedEndMs && bookedStartMs <= endMs) {
+      console.log("Date range conflict found:", {
+        requestedStart: start,
+        requestedEnd: end,
+        bookedStart: periodStart,
+        bookedEnd: periodEnd
+      });
+      return false; // Not available due to overlap
+    }
+  }
+  
+  return true; // Available
 };
 
 /**

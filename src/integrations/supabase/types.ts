@@ -18,6 +18,7 @@ export type Database = {
           end_date: string
           id: string
           notes: string | null
+          product_id: string | null
           start_date: string
           status: string
           total_price: number
@@ -30,6 +31,7 @@ export type Database = {
           end_date: string
           id?: string
           notes?: string | null
+          product_id?: string | null
           start_date: string
           status: string
           total_price: number
@@ -42,11 +44,20 @@ export type Database = {
           end_date?: string
           id?: string
           notes?: string | null
+          product_id?: string | null
           start_date?: string
           status?: string
           total_price?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bookings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {

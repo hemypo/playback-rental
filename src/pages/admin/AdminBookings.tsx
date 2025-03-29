@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { BookingPeriod } from '@/types/product';
+import { BookingPeriod, Product } from '@/types/product';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -40,12 +40,22 @@ import {
 } from 'lucide-react';
 import * as supabaseService from '@/services/supabaseService';
 
+interface BookingWithProduct extends BookingPeriod {
+  product?: Product;
+}
+
 const AdminBookings = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<BookingPeriod['status'] | 'all'>('all');
-  const [selectedBooking, setSelectedBooking] = useState<BookingPeriod | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<BookingWithProduct | null>(null);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+
+  // Fetch all products to join with bookings
+  const { data: products } = useQuery({
+    queryKey: ['admin-products'],
+    queryFn: supabaseService.getProducts,
+  });
 
   // Fetch bookings directly from Supabase
   const { data: bookings, refetch, isLoading, isError } = useQuery({
@@ -53,11 +63,21 @@ const AdminBookings = () => {
     queryFn: supabaseService.getBookings,
   });
 
+  // Join bookings with products
+  const bookingsWithProducts: BookingWithProduct[] = React.useMemo(() => {
+    if (!bookings || !products) return [];
+    
+    return bookings.map(booking => {
+      const product = products.find(p => p.id === booking.productId);
+      return { ...booking, product };
+    });
+  }, [bookings, products]);
+
   // Filtered bookings
   const filteredBookings = React.useMemo(() => {
-    if (!bookings) return [];
+    if (!bookingsWithProducts) return [];
 
-    let filtered = [...bookings];
+    let filtered = [...bookingsWithProducts];
 
     if (search) {
       const lowerSearch = search.toLowerCase();
@@ -65,7 +85,8 @@ const AdminBookings = () => {
         (booking) =>
           booking.customerName.toLowerCase().includes(lowerSearch) ||
           booking.customerEmail.toLowerCase().includes(lowerSearch) ||
-          booking.customerPhone.toLowerCase().includes(lowerSearch)
+          booking.customerPhone.toLowerCase().includes(lowerSearch) ||
+          booking.product?.title.toLowerCase().includes(lowerSearch) || false
       );
     }
 
@@ -74,7 +95,7 @@ const AdminBookings = () => {
     }
 
     return filtered;
-  }, [bookings, search, statusFilter]);
+  }, [bookingsWithProducts, search, statusFilter]);
 
   // Handlers
   const handleStatusUpdate = async (id: string, status: BookingPeriod['status']) => {
@@ -95,7 +116,7 @@ const AdminBookings = () => {
     }
   };
 
-  const handleOpenChange = (booking: BookingPeriod) => {
+  const handleOpenChange = (booking: BookingWithProduct) => {
     setSelectedBooking(booking);
     setOpen(true);
   };
@@ -145,6 +166,7 @@ const AdminBookings = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Customer</TableHead>
+                <TableHead>Product</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Start Date</TableHead>
@@ -156,7 +178,7 @@ const AdminBookings = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-4">
+                  <TableCell colSpan={8} className="text-center py-4">
                     <div className="flex items-center justify-center">
                       <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                       <span>Loading bookings...</span>
@@ -165,13 +187,13 @@ const AdminBookings = () => {
                 </TableRow>
               ) : isError ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-4 text-red-500">
+                  <TableCell colSpan={8} className="text-center py-4 text-red-500">
                     Error loading bookings. Please try again.
                   </TableCell>
                 </TableRow>
               ) : filteredBookings.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-4">
+                  <TableCell colSpan={8} className="text-center py-4">
                     No bookings found.
                   </TableCell>
                 </TableRow>
@@ -179,13 +201,14 @@ const AdminBookings = () => {
                 filteredBookings.map((booking) => (
                   <TableRow key={booking.id}>
                     <TableCell>{booking.customerName}</TableCell>
+                    <TableCell>{booking.product?.title || 'Unknown Product'}</TableCell>
                     <TableCell>{booking.customerEmail}</TableCell>
                     <TableCell>{booking.customerPhone}</TableCell>
                     <TableCell>
-                      {format(new Date(booking.startDate), 'PPP')}
+                      {format(new Date(booking.startDate), 'PPP')} {format(new Date(booking.startDate), 'HH:00')}
                     </TableCell>
                     <TableCell>
-                      {format(new Date(booking.endDate), 'PPP')}
+                      {format(new Date(booking.endDate), 'PPP')} {format(new Date(booking.endDate), 'HH:00')}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -237,6 +260,15 @@ const AdminBookings = () => {
           {selectedBooking ? (
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
+                <h3 className="text-lg font-medium">Product Information</h3>
+                <p>
+                  <strong>Product:</strong> {selectedBooking.product?.title || 'Unknown Product'}
+                </p>
+                <p>
+                  <strong>Price:</strong> {selectedBooking.product?.price || 0} ₽ / day
+                </p>
+              </div>
+              <div className="space-y-2">
                 <h3 className="text-lg font-medium">Customer Information</h3>
                 <p>
                   <strong>Name:</strong> {selectedBooking.customerName}
@@ -252,14 +284,14 @@ const AdminBookings = () => {
                 <h3 className="text-lg font-medium">Booking Information</h3>
                 <p>
                   <strong>Start Date:</strong>{' '}
-                  {format(new Date(selectedBooking.startDate), 'PPP')}
+                  {format(new Date(selectedBooking.startDate), 'PPP')} at {format(new Date(selectedBooking.startDate), 'HH:00')}
                 </p>
                 <p>
                   <strong>End Date:</strong>{' '}
-                  {format(new Date(selectedBooking.endDate), 'PPP')}
+                  {format(new Date(selectedBooking.endDate), 'PPP')} at {format(new Date(selectedBooking.endDate), 'HH:00')}
                 </p>
                 <p>
-                  <strong>Total Price:</strong> ${selectedBooking.totalPrice}
+                  <strong>Total Price:</strong> {selectedBooking.totalPrice.toFixed(2)} ₽
                 </p>
                 {selectedBooking.notes && (
                   <p>

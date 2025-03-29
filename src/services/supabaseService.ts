@@ -166,23 +166,30 @@ export const deleteBooking = async (id: string) => {
  */
 export const getAvailableProducts = async (startDate: Date, endDate: Date) => {
   try {
+    // Get all products
     const { data: products } = await supabase.from('products').select('*');
-    const { data: bookings } = await supabase.from('bookings').select('*');
     
-    if (!products || !bookings) return [];
+    if (!products) return [];
     
-    // Map bookings to DateRange objects
-    const bookedRanges = bookings.map(booking => ({
-      start: new Date(booking.start_date),
-      end: new Date(booking.end_date)
-    }));
+    // Get all bookings
+    const { data: bookings } = await supabase.from('bookings').select('*').not('status', 'eq', 'cancelled');
+    
+    if (!bookings) return products; // If no bookings, all products are available
+    
+    console.log("Filtering products for availability between", startDate, "and", endDate);
+    console.log("Total bookings in system:", bookings.length);
     
     // Filter products that are available during the selected period
     const availableProducts = products.filter(product => {
+      // Skip products that are marked as unavailable
       if (!product.available) return false;
       
       // Find bookings for this product
       const productBookings = bookings.filter(booking => booking.product_id === product.id);
+      
+      if (productBookings.length === 0) {
+        return true; // No bookings for this product, so it's available
+      }
       
       // Map to DateRange objects
       const productBookedRanges = productBookings.map(booking => ({
@@ -193,6 +200,8 @@ export const getAvailableProducts = async (startDate: Date, endDate: Date) => {
       // Check if the product is available during the selected period
       return isDateRangeAvailable(startDate, endDate, productBookedRanges);
     });
+    
+    console.log("Available products count:", availableProducts.length);
     
     return availableProducts;
   } catch (error) {

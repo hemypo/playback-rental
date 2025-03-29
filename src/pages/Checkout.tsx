@@ -1,11 +1,12 @@
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ArrowLeftIcon, 
   CalendarIcon, 
   ShieldCheckIcon, 
   TrashIcon,
+  Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,8 @@ import { useCartContext } from '@/hooks/useCart';
 import { createBooking } from '@/services/apiService';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import BookingCalendar from '@/components/BookingCalendar';
+import { BookingPeriod } from '@/types/product';
 
 const Checkout = () => {
   const [loading, setLoading] = useState(false);
@@ -32,6 +35,7 @@ const Checkout = () => {
     email: '',
     phone: ''
   });
+  const [selectedBookingTime, setSelectedBookingTime] = useState<BookingPeriod | null>(null);
 
   const { 
     cartItems, 
@@ -41,10 +45,15 @@ const Checkout = () => {
   } = useCartContext();
   
   const navigate = useNavigate();
+  const location = useLocation();
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleBookingChange = (booking: BookingPeriod) => {
+    setSelectedBookingTime(booking);
   };
   
   const handleCheckout = async () => {
@@ -71,6 +80,10 @@ const Checkout = () => {
     try {
       // Create bookings for each cart item
       for (const item of cartItems) {
+        // Use selected booking time if available, otherwise use the cart item's dates
+        const startDate = selectedBookingTime ? selectedBookingTime.startDate : item.startDate;
+        const endDate = selectedBookingTime ? selectedBookingTime.endDate : item.endDate;
+        
         // Insert directly into the database using Supabase
         const { data, error } = await supabase
           .from('bookings')
@@ -79,16 +92,17 @@ const Checkout = () => {
             customer_name: formData.name,
             customer_email: formData.email,
             customer_phone: formData.phone,
-            start_date: item.startDate.toISOString(),
-            end_date: item.endDate.toISOString(),
+            start_date: startDate.toISOString(),
+            end_date: endDate.toISOString(),
             status: 'pending',
             total_price: item.price * Math.ceil(
-              (item.endDate.getTime() - item.startDate.getTime()) / (1000 * 60 * 60 * 24)
+              (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
             ),
             notes: `Бронирование из корзины: ${item.title}`
           });
         
         if (error) {
+          console.error("Booking error:", error);
           throw error;
         }
       }
@@ -208,6 +222,36 @@ const Checkout = () => {
               )}
             </CardContent>
           </Card>
+          
+          {cartItems.length > 0 && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Редактировать время аренды</CardTitle>
+                <CardDescription>Вы можете изменить время аренды если нужно</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BookingCalendar
+                  onBookingChange={handleBookingChange}
+                  initialStartDate={cartItems[0]?.startDate}
+                  initialEndDate={cartItems[0]?.endDate}
+                  isCompact={false}
+                />
+                
+                {selectedBookingTime && (
+                  <div className="mt-4 p-3 bg-primary/10 rounded-md">
+                    <p className="text-sm font-medium flex items-center">
+                      <Clock className="h-4 w-4 mr-2" />
+                      Выбранное новое время аренды: {formatDateRange(
+                        selectedBookingTime.startDate, 
+                        selectedBookingTime.endDate, 
+                        true
+                      )}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
           
           <Card>
             <CardHeader>
