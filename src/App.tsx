@@ -15,10 +15,6 @@ const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Login = lazy(() => import("./pages/Login"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
-const AdminBookings = lazy(() => import("./pages/admin/AdminBookings"));
-const AdminCalendar = lazy(() => import("./pages/admin/AdminCalendar"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Contact = lazy(() => import("./pages/Contact"));
 import NotFound from "./pages/NotFound";
@@ -65,30 +61,10 @@ const App = () => {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/login" element={<Login />} />
                   
-                  {/* Admin routes with authentication */}
+                  {/* Admin route with authentication */}
                   <Route path="/admin" element={
                     <RequireAuth>
                       <Admin />
-                    </RequireAuth>
-                  } />
-                  <Route path="/admin/dashboard" element={
-                    <RequireAuth>
-                      <AdminDashboard />
-                    </RequireAuth>
-                  } />
-                  <Route path="/admin/products" element={
-                    <RequireAuth>
-                      <AdminProducts />
-                    </RequireAuth>
-                  } />
-                  <Route path="/admin/bookings" element={
-                    <RequireAuth>
-                      <AdminBookings />
-                    </RequireAuth>
-                  } />
-                  <Route path="/admin/calendar" element={
-                    <RequireAuth>
-                      <AdminCalendar />
                     </RequireAuth>
                   } />
                   

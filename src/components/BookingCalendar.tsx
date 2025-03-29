@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { addMonths, subMonths, format, setHours } from 'date-fns';
+import { addMonths, subMonths, format, setHours, startOfDay, isBefore } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { BookingPeriod } from '@/types/product';
 import { CalendarIcon, Clock } from 'lucide-react';
@@ -32,7 +32,8 @@ const BookingCalendar = ({
   isCompact = false, // Default to full view
   className,
 }: BookingCalendarProps) => {
-  const [date, setDate] = useState<Date | undefined>(initialStartDate || new Date());
+  const today = startOfDay(new Date());
+  const [date, setDate] = useState<Date | undefined>(initialStartDate || today);
   const [startDate, setStartDate] = useState<Date | undefined>(initialStartDate);
   const [endDate, setEndDate] = useState<Date | undefined>(initialEndDate);
   const [startHour, setStartHour] = useState<string>("9");
@@ -119,7 +120,7 @@ const BookingCalendar = ({
             size={isCompact ? "xs" : "sm"}
             onClick={(e) => {
               e.stopPropagation();
-              setDate(subMonths(date || new Date(), 1));
+              setDate(subMonths(date || today, 1));
             }}
           >
             <CalendarIcon className={cn(
@@ -133,7 +134,7 @@ const BookingCalendar = ({
             size={isCompact ? "xs" : "sm"}
             onClick={(e) => {
               e.stopPropagation();
-              setDate(addMonths(date || new Date(), 1));
+              setDate(addMonths(date || today, 1));
             }}
           >
             Следующий
@@ -147,7 +148,7 @@ const BookingCalendar = ({
           "font-medium",
           isCompact ? "text-xs" : "text-sm"
         )}>
-          {format(date || new Date(), 'MMMM yyyy')}
+          {format(date || today, 'MMMM yyyy')}
         </span>
       </div>
       <Calendar
@@ -158,6 +159,7 @@ const BookingCalendar = ({
           to: endDate,
         }}
         onSelect={handleSelectEnd}
+        disabled={(date) => isBefore(date, today)}
         className={cn(
           "border-0 p-0 pointer-events-auto w-full max-w-none",
           isCompact && "scale-[0.85] origin-top"

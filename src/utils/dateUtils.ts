@@ -1,4 +1,5 @@
-import { format, differenceInDays, isWithinInterval, addDays } from 'date-fns';
+
+import { format, differenceInDays, isWithinInterval, addDays, isBefore, startOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 export interface DateRange {
@@ -53,6 +54,13 @@ export const isDateRangeAvailable = (
   end: Date, 
   bookedPeriods: { start: Date; end: Date }[]
 ): boolean => {
+  // Check if start date is before today
+  const today = startOfDay(new Date());
+  if (isBefore(start, today) || isBefore(end, today)) {
+    console.log("Date range unavailable: date is before today");
+    return false;
+  }
+
   // If there are no booked periods, the date range is available
   if (!bookedPeriods || bookedPeriods.length === 0) {
     return true;
@@ -94,6 +102,14 @@ export const formatDateRu = (date: Date, formatStr: string): string => {
 };
 
 /**
+ * Checks if a date is in the past
+ */
+export const isDateInPast = (date: Date): boolean => {
+  const today = startOfDay(new Date());
+  return isBefore(date, today);
+};
+
+/**
  * Generates available time slots for a given day and booked ranges
  */
 export const getAvailableTimeSlots = (
@@ -102,6 +118,11 @@ export const getAvailableTimeSlots = (
   slotDurationHours: number = 1,
   businessHours: { open: number; close: number } = { open: 8, close: 22 }
 ): DateRange[] => {
+  // Check if day is in the past
+  if (isDateInPast(day)) {
+    return []; // No slots available for past days
+  }
+
   const slots: DateRange[] = [];
   const { open, close } = businessHours;
   
@@ -112,6 +133,11 @@ export const getAvailableTimeSlots = (
     
     const end = new Date(day);
     end.setHours(hour + slotDurationHours, 0, 0, 0);
+    
+    // Skip slots in the past
+    if (isDateInPast(start)) {
+      continue;
+    }
     
     // Check if this slot is available
     if (isDateRangeAvailable(start, end, bookedRanges)) {
