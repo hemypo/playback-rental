@@ -33,34 +33,31 @@ const BookingCalendar = ({
   className,
 }: BookingCalendarProps) => {
   const today = startOfDay(new Date());
-  const [date, setDate] = useState<Date | undefined>(initialStartDate || today);
-  const [startDate, setStartDate] = useState<Date | undefined>(initialStartDate);
-  const [endDate, setEndDate] = useState<Date | undefined>(initialEndDate);
-  const [startHour, setStartHour] = useState<string>("9");
-  const [endHour, setEndHour] = useState<string>("18");
+  const [currentMonth, setCurrentMonth] = useState<Date>(initialStartDate || today);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(
+    initialStartDate && initialEndDate 
+      ? { from: initialStartDate, to: initialEndDate }
+      : undefined
+  );
+  const [startHour, setStartHour] = useState<string>(initialStartDate?.getHours().toString() || "9");
+  const [endHour, setEndHour] = useState<string>(initialEndDate?.getHours().toString() || "18");
   
   useEffect(() => {
-    setStartDate(initialStartDate);
-    setEndDate(initialEndDate);
-    
-    // Set default time values if dates are provided
-    if (initialStartDate) {
+    if (initialStartDate && initialEndDate) {
+      setDateRange({ from: initialStartDate, to: initialEndDate });
       setStartHour(initialStartDate.getHours().toString());
-    }
-    
-    if (initialEndDate) {
       setEndHour(initialEndDate.getHours().toString());
     }
   }, [initialStartDate, initialEndDate]);
   
   // Update booking when any date or time value changes
   useEffect(() => {
-    if (startDate && endDate) {
+    if (dateRange?.from) {
       // Create dates with time
-      const startWithTime = new Date(startDate);
+      const startWithTime = new Date(dateRange.from);
       startWithTime.setHours(parseInt(startHour), 0, 0); // Set minutes to 00
       
-      const endWithTime = new Date(endDate);
+      const endWithTime = new Date(dateRange.to || dateRange.from);
       endWithTime.setHours(parseInt(endHour), 0, 0); // Set minutes to 00
       
       // Create booking object
@@ -80,17 +77,20 @@ const BookingCalendar = ({
       
       onBookingChange(newBooking);
     }
-  }, [startDate, endDate, startHour, endHour]);
+  }, [dateRange, startHour, endHour]);
   
-  const handleSelectEnd = (range: DateRange | undefined) => {
-    if (!range) return;
-    
-    const { from, to } = range;
-    
-    if (!from) return;
-    
-    setStartDate(from);
-    setEndDate(to || from);
+  const handleSelectDate = (range: DateRange | undefined) => {
+    setDateRange(range);
+  };
+  
+  const handlePrevMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentMonth(subMonths(currentMonth, 1));
+  };
+
+  const handleNextMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentMonth(addMonths(currentMonth, 1));
   };
   
   // Generate hour options (full hours only)
@@ -118,10 +118,7 @@ const BookingCalendar = ({
           <Button
             variant="outline"
             size={isCompact ? "xs" : "sm"}
-            onClick={(e) => {
-              e.stopPropagation();
-              setDate(subMonths(date || today, 1));
-            }}
+            onClick={handlePrevMonth}
           >
             <CalendarIcon className={cn(
               "mr-1 h-3 w-3", 
@@ -132,10 +129,7 @@ const BookingCalendar = ({
           <Button
             variant="outline"
             size={isCompact ? "xs" : "sm"}
-            onClick={(e) => {
-              e.stopPropagation();
-              setDate(addMonths(date || today, 1));
-            }}
+            onClick={handleNextMonth}
           >
             Следующий
             <CalendarIcon className={cn(
@@ -148,17 +142,14 @@ const BookingCalendar = ({
           "font-medium",
           isCompact ? "text-xs" : "text-sm"
         )}>
-          {format(date || today, 'MMMM yyyy')}
+          {format(currentMonth, 'MMMM yyyy')}
         </span>
       </div>
       <Calendar
         mode="range"
-        defaultMonth={date}
-        selected={{
-          from: startDate,
-          to: endDate,
-        }}
-        onSelect={handleSelectEnd}
+        month={currentMonth}
+        selected={dateRange}
+        onSelect={handleSelectDate}
         disabled={(date) => isBefore(date, today)}
         className={cn(
           "border-0 p-0 pointer-events-auto w-full max-w-none",
@@ -218,7 +209,7 @@ const BookingCalendar = ({
         </div>
       </div>
       
-      {startDate && endDate && (
+      {dateRange?.from && (
         <div className={cn(
           "mt-4 p-3 bg-muted/30 rounded-md",
           isCompact && "mt-2 p-2 text-xs"
@@ -231,7 +222,7 @@ const BookingCalendar = ({
             "text-sm",
             isCompact && "text-xs"
           )}>
-            {startDate ? format(startDate, 'dd.MM.yyyy') : ''} {startHour}:00 - {endDate ? format(endDate, 'dd.MM.yyyy') : ''} {endHour}:00
+            {dateRange.from ? format(dateRange.from, 'dd.MM.yyyy') : ''} {startHour}:00 - {dateRange.to ? format(dateRange.to, 'dd.MM.yyyy') : format(dateRange.from, 'dd.MM.yyyy')} {endHour}:00
           </p>
         </div>
       )}

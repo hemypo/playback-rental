@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -8,13 +9,13 @@ import { getProducts, getCategories } from '@/services/apiService';
 import { BookingCalendar } from '@/components/BookingCalendar';
 import { BookingPeriod } from '@/types/product';
 import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const Index = () => {
   const navigate = useNavigate();
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [booking, setBooking] = useState<BookingPeriod>();
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const { data: featuredProducts, isLoading: productsLoading } = useQuery({
     queryKey: ['featuredProducts'],
@@ -66,18 +67,28 @@ const Index = () => {
             <div className="w-full glass-panel p-4 rounded-xl">
               <h2 className="text-lg font-medium mb-3">Найдите доступное оборудование</h2>
               
-              {/* Simplified single-line date selection */}
               <div className="flex flex-wrap items-center gap-3">
-                <Button 
-                  variant="outline" 
-                  className="flex-grow md:flex-grow-0 bg-white/90 text-foreground min-w-[240px] justify-between"
-                  onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-                >
-                  {startDate && endDate 
-                    ? `${format(startDate, 'dd.MM.yyyy HH:00')} - ${format(endDate, 'dd.MM.yyyy HH:00')}`
-                    : "Выберите дату и время"}
-                  <ArrowRightIcon className="ml-2 h-4 w-4" />
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="flex-grow md:flex-grow-0 bg-white/90 text-foreground min-w-[240px] justify-between h-10"
+                    >
+                      {startDate && endDate 
+                        ? `${format(startDate, 'dd.MM.yyyy HH:00')} - ${format(endDate, 'dd.MM.yyyy HH:00')}`
+                        : "Выберите дату и время"}
+                      <ArrowRightIcon className="ml-2 h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-2" align="start" sideOffset={5}>
+                    <BookingCalendar
+                      onBookingChange={handleBookingChange}
+                      initialStartDate={startDate}
+                      initialEndDate={endDate}
+                      isCompact={true}
+                    />
+                  </PopoverContent>
+                </Popover>
                 
                 {startDate && endDate && (
                   <Button 
@@ -88,16 +99,6 @@ const Index = () => {
                   </Button>
                 )}
               </div>
-              
-              {isCalendarOpen && (
-                <div className="mt-4 bg-white rounded-lg shadow-lg">
-                  <BookingCalendar
-                    onBookingChange={handleBookingChange}
-                    initialStartDate={startDate}
-                    initialEndDate={endDate}
-                  />
-                </div>
-              )}
             </div>
           </div>
         </div>
