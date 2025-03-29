@@ -104,6 +104,18 @@ const BookingCalendar = ({
     e.stopPropagation();
   };
   
+  // Custom day renderer to highlight the end date in red
+  const modifiersStyles = {
+    day_selected: {
+      backgroundColor: 'hsl(var(--primary))',
+      color: 'hsl(var(--primary-foreground))',
+    },
+    day_range_end: {
+      backgroundColor: '#ea384c !important',
+      color: 'white !important',
+    }
+  };
+  
   return (
     <div className={cn(
       "border rounded-md p-2", 
@@ -151,6 +163,7 @@ const BookingCalendar = ({
         selected={dateRange}
         onSelect={handleSelectDate}
         disabled={(date) => isBefore(date, today)}
+        modifiersStyles={modifiersStyles}
         className={cn(
           "border-0 p-0 pointer-events-auto w-full max-w-none",
           isCompact && "scale-[0.85] origin-top"

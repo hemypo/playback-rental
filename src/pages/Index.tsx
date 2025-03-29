@@ -92,7 +92,7 @@ const Index = () => {
                 
                 {startDate && endDate && (
                   <Button 
-                    className="flex-grow md:flex-grow-0" 
+                    className="flex-grow md:flex-grow-0 bg-primary text-primary-foreground hover:bg-primary/90" 
                     onClick={handleSearchClick}
                   >
                     Перейти в каталог
