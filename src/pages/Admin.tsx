@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -7,17 +7,60 @@ import {
   Calendar, 
   ClipboardList, 
   Users, 
-  Settings, 
   LogOut
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { logout, getCurrentUser } from '@/services/apiService';
 
-import AdminDashboard from './AdminDashboard';
-import AdminProducts from './admin/AdminProducts';
-import AdminBookings from './admin/AdminBookings';
-import AdminCalendar from './admin/AdminCalendar';
+// Create local tab content components instead of importing the full pages
+const DashboardTab = () => (
+  <div>
+    <h2 className="text-2xl font-semibold mb-6">Дашборд</h2>
+    <p className="text-muted-foreground mb-4">
+      Для просмотра полной статистики перейдите на страницу дашборда.
+    </p>
+    <Button asChild>
+      <Link to="/admin/dashboard">Открыть полный дашборд</Link>
+    </Button>
+  </div>
+);
+
+const ProductsTab = () => (
+  <div>
+    <h2 className="text-2xl font-semibold mb-6">Товары</h2>
+    <p className="text-muted-foreground mb-4">
+      Для полного управления товарами перейдите на страницу товаров.
+    </p>
+    <Button asChild>
+      <Link to="/admin/products">Управление товарами</Link>
+    </Button>
+  </div>
+);
+
+const BookingsTab = () => (
+  <div>
+    <h2 className="text-2xl font-semibold mb-6">Заявки</h2>
+    <p className="text-muted-foreground mb-4">
+      Для полного управления заявками перейдите на страницу заявок.
+    </p>
+    <Button asChild>
+      <Link to="/admin/bookings">Управление заявками</Link>
+    </Button>
+  </div>
+);
+
+const CalendarTab = () => (
+  <div>
+    <h2 className="text-2xl font-semibold mb-6">Календарь</h2>
+    <p className="text-muted-foreground mb-4">
+      Для полного управления календарем перейдите на страницу календаря.
+    </p>
+    <Button asChild>
+      <Link to="/admin/calendar">Открыть календарь</Link>
+    </Button>
+  </div>
+);
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -41,7 +84,7 @@ const Admin = () => {
           
           <nav className="space-y-1">
             <NavLink 
-              to="/admin" 
+              to="/admin/dashboard" 
               icon={<LayoutDashboard className="h-5 w-5" />}
               active={activeTab === 'dashboard'}
               onClick={() => setActiveTab('dashboard')}
@@ -49,7 +92,7 @@ const Admin = () => {
               Дашборд
             </NavLink>
             <NavLink 
-              to="/admin" 
+              to="/admin/products" 
               icon={<Package className="h-5 w-5" />}
               active={activeTab === 'products'}
               onClick={() => setActiveTab('products')}
@@ -57,7 +100,7 @@ const Admin = () => {
               Товары
             </NavLink>
             <NavLink 
-              to="/admin" 
+              to="/admin/bookings" 
               icon={<ClipboardList className="h-5 w-5" />}
               active={activeTab === 'bookings'}
               onClick={() => setActiveTab('bookings')}
@@ -65,7 +108,7 @@ const Admin = () => {
               Заявки
             </NavLink>
             <NavLink 
-              to="/admin" 
+              to="/admin/calendar" 
               icon={<Calendar className="h-5 w-5" />}
               active={activeTab === 'calendar'}
               onClick={() => setActiveTab('calendar')}
@@ -119,19 +162,19 @@ const Admin = () => {
             </div>
             
             <TabsContent value="dashboard">
-              <AdminDashboard />
+              <DashboardTab />
             </TabsContent>
             
             <TabsContent value="products">
-              <AdminProducts />
+              <ProductsTab />
             </TabsContent>
             
             <TabsContent value="bookings">
-              <AdminBookings />
+              <BookingsTab />
             </TabsContent>
             
             <TabsContent value="calendar">
-              <AdminCalendar />
+              <CalendarTab />
             </TabsContent>
           </Tabs>
         </div>
