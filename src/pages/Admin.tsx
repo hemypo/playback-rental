@@ -7,7 +7,10 @@ import {
   Calendar, 
   ClipboardList, 
   Users, 
-  LogOut
+  LogOut,
+  FileUp,
+  FileDown,
+  Plus
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -28,21 +31,70 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { BookingPeriod, Product } from '@/types/product';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import * as supabaseService from '@/services/supabaseService';
+import { Switch } from '@/components/ui/switch';
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const { toast } = useToast();
+
+  // Product state
+  const [productDialogOpen, setProductDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productValues, setProductValues] = useState({
+    title: '',
+    description: '',
+    price: 0,
+    category: '',
+    imageUrl: '',
+    available: true,
+    quantity: 1
+  });
+
+  // CSV state
+  const [csvDialogOpen, setCsvDialogOpen] = useState(false);
+  const [csvContent, setCsvContent] = useState('');
+
+  // Booking state
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<BookingPeriod | null>(null);
 
   // Fetch bookings and products data
-  const { data: bookings, isLoading: isLoadingBookings } = useQuery({
+  const { data: bookings, isLoading: isLoadingBookings, refetch: refetchBookings } = useQuery({
     queryKey: ['admin-bookings'],
     queryFn: getBookings
   });
 
-  const { data: products, isLoading: isLoadingProducts } = useQuery({
+  const { data: products, isLoading: isLoadingProducts, refetch: refetchProducts } = useQuery({
     queryKey: ['admin-products'],
     queryFn: getProducts
+  });
+
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: supabaseService.getCategories
   });
 
   const handleLogout = () => {
@@ -57,18 +109,173 @@ const Admin = () => {
   };
 
   // Function to format booking status
-  const formatStatus = (status: string): { label: string; variant: "default" | "destructive" | "outline" | "secondary" | "success" | "warning" | null | undefined } => {
+  const formatStatus = (status: string): { label: string; variant: "default" | "destructive" | "outline" | "secondary" } => {
     switch (status) {
       case 'confirmed':
-        return { label: 'Подтверждено', variant: 'success' };
+        return { label: 'Подтверждено', variant: 'default' };
       case 'pending':
-        return { label: 'В ожидании', variant: 'warning' };
+        return { label: 'В ожидании', variant: 'secondary' };
       case 'cancelled':
         return { label: 'Отменено', variant: 'destructive' };
       case 'completed':
-        return { label: 'Завершено', variant: 'secondary' };
+        return { label: 'Завершено', variant: 'outline' };
       default:
         return { label: status, variant: 'outline' };
+    }
+  };
+
+  // Product dialog handlers
+  const openProductDialog = (product?: Product) => {
+    if (product) {
+      setEditingProduct(product);
+      setProductValues({
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        category: product.category,
+        imageUrl: product.imageUrl,
+        available: product.available,
+        quantity: product.quantity
+      });
+    } else {
+      setEditingProduct(null);
+      setProductValues({
+        title: '',
+        description: '',
+        price: 0,
+        category: '',
+        imageUrl: '',
+        available: true,
+        quantity: 1
+      });
+    }
+    setProductDialogOpen(true);
+  };
+
+  const handleProductChange = (field: string, value: any) => {
+    setProductValues((prev) => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleProductSubmit = async () => {
+    try {
+      if (editingProduct) {
+        // Update existing product
+        await supabaseService.updateProduct(editingProduct.id, {
+          title: productValues.title,
+          description: productValues.description,
+          price: productValues.price,
+          category: productValues.category,
+          imageUrl: productValues.imageUrl,
+          available: productValues.available,
+          quantity: productValues.quantity
+        });
+        toast({
+          title: "Товар обновлен",
+          description: "Товар успешно обновлен"
+        });
+      } else {
+        // Create new product
+        await supabaseService.createProduct({
+          title: productValues.title,
+          description: productValues.description,
+          price: productValues.price,
+          category: productValues.category,
+          imageUrl: productValues.imageUrl,
+          available: productValues.available,
+          quantity: productValues.quantity
+        });
+        toast({
+          title: "Товар добавлен",
+          description: "Новый товар успешно добавлен"
+        });
+      }
+      
+      // Close dialog and refresh data
+      setProductDialogOpen(false);
+      refetchProducts();
+    } catch (error: any) {
+      toast({
+        title: "Ошибка",
+        description: error.message || "Произошла ошибка при сохранении товара",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // CSV handlers
+  const handleExportCsv = async () => {
+    try {
+      const csvData = await supabaseService.exportProductsToCSV();
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create and click a download link
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'products.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Экспорт выполнен",
+        description: "Данные успешно экспортированы в CSV"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Ошибка экспорта",
+        description: error.message || "Произошла ошибка при экспорте данных",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleImportCsv = async () => {
+    try {
+      await supabaseService.importProductsFromCSV(csvContent);
+      
+      setCsvDialogOpen(false);
+      setCsvContent('');
+      refetchProducts();
+      
+      toast({
+        title: "Импорт выполнен",
+        description: "Данные успешно импортированы из CSV"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Ошибка импорта",
+        description: error.message || "Произошла ошибка при импорте данных",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Booking handlers
+  const openBookingDialog = (booking: BookingPeriod) => {
+    setSelectedBooking(booking);
+    setBookingDialogOpen(true);
+  };
+
+  const handleUpdateBookingStatus = async (id: string, status: string) => {
+    try {
+      await supabaseService.updateBookingStatus(id, status);
+      refetchBookings();
+      setBookingDialogOpen(false);
+      
+      toast({
+        title: "Статус обновлен",
+        description: "Статус заявки успешно обновлен"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Ошибка",
+        description: error.message || "Произошла ошибка при обновлении статуса",
+        variant: "destructive"
+      });
     }
   };
 
@@ -174,7 +381,20 @@ const Admin = () => {
                       Просмотр и редактирование товаров
                     </p>
                   </div>
-                  <Button>Добавить товар</Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setCsvDialogOpen(true)}>
+                      <FileUp className="h-4 w-4 mr-2" />
+                      Импорт CSV
+                    </Button>
+                    <Button variant="outline" onClick={handleExportCsv}>
+                      <FileDown className="h-4 w-4 mr-2" />
+                      Экспорт CSV
+                    </Button>
+                    <Button onClick={() => openProductDialog()}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Добавить товар
+                    </Button>
+                  </div>
                 </div>
 
                 {isLoadingProducts ? (
@@ -214,12 +434,12 @@ const Admin = () => {
                               <TableCell>{product.category}</TableCell>
                               <TableCell>{product.price.toLocaleString()} ₽</TableCell>
                               <TableCell>
-                                <Badge variant={product.available ? "success" : "destructive"}>
+                                <Badge variant={product.available ? "default" : "destructive"}>
                                   {product.available ? 'Доступен' : 'Недоступен'}
                                 </Badge>
                               </TableCell>
                               <TableCell>
-                                <Button variant="outline" size="sm">Редактировать</Button>
+                                <Button variant="outline" size="sm" onClick={() => openProductDialog(product)}>Редактировать</Button>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -232,7 +452,7 @@ const Admin = () => {
                     <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <h3 className="text-lg font-medium mb-1">Нет товаров</h3>
                     <p className="text-muted-foreground mb-4">Добавьте первый товар в систему</p>
-                    <Button>Добавить товар</Button>
+                    <Button onClick={() => openProductDialog()}>Добавить товар</Button>
                   </div>
                 )}
               </div>
@@ -247,7 +467,6 @@ const Admin = () => {
                       Просмотр и редактирование заявок на бронирование
                     </p>
                   </div>
-                  <Button>Создать заявку</Button>
                 </div>
 
                 {isLoadingBookings ? (
@@ -298,7 +517,7 @@ const Admin = () => {
                               <TableCell className="font-medium">{booking.totalPrice.toLocaleString()} ₽</TableCell>
                               <TableCell>
                                 <div className="flex gap-1">
-                                  <Button variant="outline" size="sm">Изменить</Button>
+                                  <Button variant="outline" size="sm" onClick={() => openBookingDialog(booking)}>Изменить</Button>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -312,7 +531,6 @@ const Admin = () => {
                     <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <h3 className="text-lg font-medium mb-1">Нет заявок</h3>
                     <p className="text-muted-foreground mb-4">Заявки на бронирование будут отображаться здесь</p>
-                    <Button>Создать заявку</Button>
                   </div>
                 )}
               </div>
@@ -324,6 +542,225 @@ const Admin = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Product Dialog */}
+      <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
+        <DialogContent className="sm:max-w-[625px]">
+          <DialogHeader>
+            <DialogTitle>{editingProduct ? 'Редактировать товар' : 'Добавить новый товар'}</DialogTitle>
+            <DialogDescription>
+              Заполните все поля формы и нажмите Сохранить
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="title" className="text-right">
+                Название
+              </Label>
+              <Input
+                id="title"
+                value={productValues.title}
+                onChange={(e) => handleProductChange('title', e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="price" className="text-right">
+                Цена
+              </Label>
+              <Input
+                id="price"
+                type="number"
+                value={productValues.price}
+                onChange={(e) => handleProductChange('price', Number(e.target.value))}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="category" className="text-right">
+                Категория
+              </Label>
+              <Select
+                value={productValues.category}
+                onValueChange={(value) => handleProductChange('category', value)}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Выберите категорию" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.map((category: any) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="imageUrl" className="text-right">
+                URL изображения
+              </Label>
+              <Input
+                id="imageUrl"
+                value={productValues.imageUrl}
+                onChange={(e) => handleProductChange('imageUrl', e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="quantity" className="text-right">
+                Количество
+              </Label>
+              <Input
+                id="quantity"
+                type="number"
+                min="1"
+                value={productValues.quantity}
+                onChange={(e) => handleProductChange('quantity', Number(e.target.value))}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="available" className="text-right">
+                Доступен
+              </Label>
+              <div className="col-span-3 flex items-center">
+                <Switch
+                  id="available"
+                  checked={productValues.available}
+                  onCheckedChange={(checked) => handleProductChange('available', checked)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="description" className="text-right">
+                Описание
+              </Label>
+              <Textarea
+                id="description"
+                value={productValues.description}
+                onChange={(e) => handleProductChange('description', e.target.value)}
+                className="col-span-3"
+                rows={5}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProductDialogOpen(false)}>Отмена</Button>
+            <Button onClick={handleProductSubmit}>Сохранить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* CSV Dialog */}
+      <Dialog open={csvDialogOpen} onOpenChange={setCsvDialogOpen}>
+        <DialogContent className="sm:max-w-[625px]">
+          <DialogHeader>
+            <DialogTitle>Импорт товаров из CSV</DialogTitle>
+            <DialogDescription>
+              Вставьте данные в формате CSV: id,title,description,price,category,imageurl,quantity,available
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              value={csvContent}
+              onChange={(e) => setCsvContent(e.target.value)}
+              className="min-h-[300px]"
+              placeholder="id,title,description,price,category,imageurl,quantity,available"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCsvDialogOpen(false)}>Отмена</Button>
+            <Button onClick={handleImportCsv}>Импортировать</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Booking Dialog */}
+      <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
+        <DialogContent className="sm:max-w-[625px]">
+          <DialogHeader>
+            <DialogTitle>Информация о бронировании</DialogTitle>
+          </DialogHeader>
+          {selectedBooking && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-1 gap-2">
+                <h3 className="font-medium">Клиент</h3>
+                <div className="bg-muted/30 p-3 rounded-md">
+                  <p><strong>Имя:</strong> {selectedBooking.customerName}</p>
+                  <p><strong>Телефон:</strong> {selectedBooking.customerPhone}</p>
+                  <p><strong>Email:</strong> {selectedBooking.customerEmail}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-2">
+                <h3 className="font-medium">Товар</h3>
+                <div className="bg-muted/30 p-3 rounded-md">
+                  <p><strong>Название:</strong> {getProductTitle(selectedBooking.productId)}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-2">
+                <h3 className="font-medium">Даты</h3>
+                <div className="bg-muted/30 p-3 rounded-md">
+                  <p><strong>Начало:</strong> {format(new Date(selectedBooking.startDate), 'dd.MM.yyyy HH:mm')}</p>
+                  <p><strong>Конец:</strong> {format(new Date(selectedBooking.endDate), 'dd.MM.yyyy HH:mm')}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-2">
+                <h3 className="font-medium">Дополнительная информация</h3>
+                <div className="bg-muted/30 p-3 rounded-md">
+                  <p><strong>Статус:</strong> {formatStatus(selectedBooking.status).label}</p>
+                  <p><strong>Сумма:</strong> {selectedBooking.totalPrice.toLocaleString()} ₽</p>
+                  {selectedBooking.notes && <p><strong>Примечания:</strong> {selectedBooking.notes}</p>}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-2">
+                <h3 className="font-medium">Изменить статус</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                    onClick={() => handleUpdateBookingStatus(selectedBooking.id, 'confirmed')}
+                    disabled={selectedBooking.status === 'confirmed'}
+                  >
+                    Подтвердить
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200"
+                    onClick={() => handleUpdateBookingStatus(selectedBooking.id, 'pending')}
+                    disabled={selectedBooking.status === 'pending'}
+                  >
+                    Ожидание
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                    onClick={() => handleUpdateBookingStatus(selectedBooking.id, 'completed')}
+                    disabled={selectedBooking.status === 'completed'}
+                  >
+                    Завершить
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                    onClick={() => handleUpdateBookingStatus(selectedBooking.id, 'cancelled')}
+                    disabled={selectedBooking.status === 'cancelled'}
+                  >
+                    Отменить
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBookingDialogOpen(false)}>Закрыть</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
