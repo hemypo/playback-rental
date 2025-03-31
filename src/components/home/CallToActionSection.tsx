@@ -15,7 +15,7 @@ export const CallToActionSection = () => {
             <Button size="lg" variant="default" asChild className="bg-white text-primary hover:bg-white/90">
               <Link to="/catalog">Каталог</Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="border-white text-white hover:bg-white/10">
+            <Button size="lg" variant="outline" asChild className="border-white text-white hover:bg-transparent hover:bg-white/10">
               <Link to="/contact">Контакты</Link>
             </Button>
           </div>
@@ -24,3 +24,4 @@ export const CallToActionSection = () => {
     </section>
   );
 };
+
