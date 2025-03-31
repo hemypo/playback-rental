@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { addMonths, subMonths, format, setHours, startOfDay, isBefore } from 'date-fns';
-import { Button } from '@/components/ui/button';
+import { ru } from 'date-fns/locale';
 import { BookingPeriod } from '@/types/product';
-import { CalendarIcon, Clock } from 'lucide-react';
+import { CalendarIcon, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import {
   Select,
@@ -83,13 +83,11 @@ const BookingCalendar = ({
     setDateRange(range);
   };
   
-  const handlePrevMonth = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handlePrevMonth = () => {
     setCurrentMonth(subMonths(currentMonth, 1));
   };
 
-  const handleNextMonth = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleNextMonth = () => {
     setCurrentMonth(addMonths(currentMonth, 1));
   };
   
@@ -126,36 +124,28 @@ const BookingCalendar = ({
         "flex items-center justify-between", 
         isCompact ? "py-1" : "py-2"
       )}>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size={isCompact ? "xs" : "sm"}
-            onClick={handlePrevMonth}
-          >
-            <CalendarIcon className={cn(
-              "mr-1 h-3 w-3", 
-              !isCompact && "mr-2 h-4 w-4"
-            )} />
-            Предыдущий
-          </Button>
-          <Button
-            variant="outline"
-            size={isCompact ? "xs" : "sm"}
-            onClick={handleNextMonth}
-          >
-            Следующий
-            <CalendarIcon className={cn(
-              "ml-1 h-3 w-3", 
-              !isCompact && "ml-2 h-4 w-4"
-            )} />
-          </Button>
-        </div>
         <span className={cn(
           "font-medium",
           isCompact ? "text-xs" : "text-sm"
         )}>
-          {format(currentMonth, 'MMMM yyyy')}
+          {format(currentMonth, 'LLLL yyyy', { locale: ru })}
         </span>
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={handlePrevMonth}
+            className="p-1 rounded-md hover:bg-muted"
+            aria-label="Предыдущий месяц"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button 
+            onClick={handleNextMonth}
+            className="p-1 rounded-md hover:bg-muted"
+            aria-label="Следующий месяц"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </div>
       <Calendar
         mode="range"
@@ -168,6 +158,7 @@ const BookingCalendar = ({
           "border-0 p-0 pointer-events-auto w-full max-w-none",
           isCompact && "scale-[0.85] origin-top"
         )}
+        locale={ru}
       />
       
       {/* Time selection */}
@@ -235,7 +226,7 @@ const BookingCalendar = ({
             "text-sm",
             isCompact && "text-xs"
           )}>
-            {dateRange.from ? format(dateRange.from, 'dd.MM.yyyy') : ''} {startHour}:00 - {dateRange.to ? format(dateRange.to, 'dd.MM.yyyy') : format(dateRange.from, 'dd.MM.yyyy')} {endHour}:00
+            {dateRange.from ? format(dateRange.from, 'dd.MM.yyyy', { locale: ru }) : ''} {startHour}:00 - {dateRange.to ? format(dateRange.to, 'dd.MM.yyyy', { locale: ru }) : format(dateRange.from, 'dd.MM.yyyy', { locale: ru })} {endHour}:00
           </p>
         </div>
       )}
