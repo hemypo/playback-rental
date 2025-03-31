@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { addMonths, subMonths, format, setHours, startOfDay, isBefore } from 'date-fns';
+import { format, startOfDay, isBefore } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { BookingPeriod } from '@/types/product';
 import { Clock } from 'lucide-react';
@@ -14,8 +14,8 @@ interface BookingCalendarProps {
   initialStartDate?: Date;
   initialEndDate?: Date;
   bookedPeriods?: BookingPeriod[];
-  isCompact?: boolean; // New prop to control compact view
-  className?: string; // Add className prop
+  isCompact?: boolean;
+  className?: string;
 }
 
 const BookingCalendar = ({
@@ -24,7 +24,6 @@ const BookingCalendar = ({
   initialEndDate,
   bookedPeriods,
   isCompact = false,
-  // Default to full view
   className
 }: BookingCalendarProps) => {
   const today = startOfDay(new Date());
@@ -52,10 +51,10 @@ const BookingCalendar = ({
     if (dateRange?.from) {
       // Create dates with time
       const startWithTime = new Date(dateRange.from);
-      startWithTime.setHours(parseInt(startHour), 0, 0); // Set minutes to 00
+      startWithTime.setHours(parseInt(startHour), 0, 0);
 
       const endWithTime = new Date(dateRange.to || dateRange.from);
-      endWithTime.setHours(parseInt(endHour), 0, 0); // Set minutes to 00
+      endWithTime.setHours(parseInt(endHour), 0, 0);
 
       // Create booking object
       const newBooking: BookingPeriod = {
@@ -73,7 +72,7 @@ const BookingCalendar = ({
       };
       onBookingChange(newBooking);
     }
-  }, [dateRange, startHour, endHour]);
+  }, [dateRange, startHour, endHour, onBookingChange]);
 
   const handleSelectDate = (range: DateRange | undefined) => {
     setDateRange(range);
@@ -112,6 +111,7 @@ const BookingCalendar = ({
       <Calendar 
         mode="range" 
         month={currentMonth} 
+        onMonthChange={setCurrentMonth}
         selected={dateRange} 
         onSelect={handleSelectDate} 
         disabled={date => isBefore(date, today)} 
@@ -121,7 +121,6 @@ const BookingCalendar = ({
         formatters={{
           formatMonthCaption: (date) => format(date, 'LLLL yyyy', { locale: ru })
         }}
-        onMonthChange={setCurrentMonth}
       />
       
       {/* Time selection */}
