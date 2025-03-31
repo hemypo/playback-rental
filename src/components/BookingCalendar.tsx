@@ -1,12 +1,14 @@
+
 import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { addMonths, subMonths, format, setHours, startOfDay, isBefore } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { BookingPeriod } from '@/types/product';
-import { CalendarIcon, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 interface BookingCalendarProps {
   onBookingChange: (booking: BookingPeriod) => void;
   initialStartDate?: Date;
@@ -15,6 +17,7 @@ interface BookingCalendarProps {
   isCompact?: boolean; // New prop to control compact view
   className?: string; // Add className prop
 }
+
 const BookingCalendar = ({
   onBookingChange,
   initialStartDate,
@@ -32,6 +35,7 @@ const BookingCalendar = ({
   } : undefined);
   const [startHour, setStartHour] = useState<string>(initialStartDate?.getHours().toString() || "9");
   const [endHour, setEndHour] = useState<string>(initialEndDate?.getHours().toString() || "18");
+
   useEffect(() => {
     if (initialStartDate && initialEndDate) {
       setDateRange({
@@ -70,14 +74,9 @@ const BookingCalendar = ({
       onBookingChange(newBooking);
     }
   }, [dateRange, startHour, endHour]);
+
   const handleSelectDate = (range: DateRange | undefined) => {
     setDateRange(range);
-  };
-  const handlePrevMonth = () => {
-    setCurrentMonth(subMonths(currentMonth, 1));
-  };
-  const handleNextMonth = () => {
-    setCurrentMonth(addMonths(currentMonth, 1));
   };
 
   // Generate hour options (full hours only)
@@ -104,19 +103,26 @@ const BookingCalendar = ({
       color: 'white !important'
     }
   };
-  return <div className={cn("border rounded-md p-2", isCompact ? "space-y-2" : "space-y-4", className)} onClick={handleCalendarInteraction}>
-      <div className={cn("flex items-center justify-between", isCompact ? "py-1" : "py-2")}>
-        
-        <div className="flex items-center gap-1">
-          <button onClick={handlePrevMonth} className="p-1 rounded-md hover:bg-muted" aria-label="Предыдущий месяц">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button onClick={handleNextMonth} className="p-1 rounded-md hover:bg-muted" aria-label="Следующий месяц">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-      <Calendar mode="range" month={currentMonth} selected={dateRange} onSelect={handleSelectDate} disabled={date => isBefore(date, today)} modifiersStyles={modifiersStyles} className={cn("border-0 p-0 pointer-events-auto w-full max-w-none", isCompact && "scale-[0.85] origin-top")} locale={ru} />
+
+  return (
+    <div 
+      className={cn("border rounded-md p-2", isCompact ? "space-y-2" : "space-y-4", className)} 
+      onClick={handleCalendarInteraction}
+    >
+      <Calendar 
+        mode="range" 
+        month={currentMonth} 
+        selected={dateRange} 
+        onSelect={handleSelectDate} 
+        disabled={date => isBefore(date, today)} 
+        modifiersStyles={modifiersStyles} 
+        className={cn("border-0 p-0 pointer-events-auto w-full max-w-none", isCompact && "scale-[0.85] origin-top")} 
+        locale={ru}
+        formatters={{
+          formatMonthCaption: (date) => format(date, 'LLLL yyyy', { locale: ru })
+        }}
+        onMonthChange={setCurrentMonth}
+      />
       
       {/* Time selection */}
       <div className={cn("grid grid-cols-2 gap-4", isCompact && "mt-2 gap-2")}>
@@ -163,7 +169,9 @@ const BookingCalendar = ({
         })} {endHour}:00
           </p>
         </div>}
-    </div>;
+    </div>
+  );
 };
+
 export { BookingCalendar };
 export default BookingCalendar;
