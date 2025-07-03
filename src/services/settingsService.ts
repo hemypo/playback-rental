@@ -1,9 +1,9 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabaseServiceClient } from './supabaseClient';
 
 export const getSettings = async () => {
   try {
-    const { data, error } = await supabase.from('settings').select('*');
+    const { data, error } = await supabaseServiceClient.from('settings').select('*');
     if (error) throw error;
     return data || [];
   } catch (error) {
@@ -14,7 +14,7 @@ export const getSettings = async () => {
 
 export const updateSettings = async (key: string, value: string) => {
   try {
-    const { data, error } = await supabase.from('settings').update({ value }).eq('key', key).select().single();
+    const { data, error } = await supabaseServiceClient.from('settings').update({ value }).eq('key', key).select().single();
     if (error) throw error;
     return data;
   } catch (error) {
