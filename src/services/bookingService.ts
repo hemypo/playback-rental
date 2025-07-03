@@ -1,6 +1,5 @@
 
 import { BookingPeriod, BookingFormData } from '@/types/product';
-import { supabaseServiceClient } from './supabaseClient';
 import { getProducts } from './productService';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDateRu, isDateRangeAvailable } from '@/utils/dateUtils';
