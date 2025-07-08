@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ProductFormValues } from '@/hooks/useProductForm';
 import { uploadProductImage } from '@/utils/imageUtils';
