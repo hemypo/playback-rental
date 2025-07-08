@@ -50,6 +50,7 @@ export const useProductManagement = () => {
         imageUrl: typeof imageFile === 'string' ? imageFile : formData.imageUrl
       };
 
+      console.log("Product data being sent:", productData);
       await createProductMutation.mutateAsync(productData);
       console.log("Product created successfully");
     } catch (error) {
