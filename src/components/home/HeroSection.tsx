@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRightIcon, SearchIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import BookingCalendar from '@/components/BookingCalendar';
+import DateRangePickerRu from '@/components/booking/DateRangePickerRu';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -30,9 +30,11 @@ export const HeroSection = () => {
     };
     fetchBannerImage();
   }, []);
-  const handleBookingChange = (bookingData: BookingPeriod) => {
-    setStartDate(bookingData.startDate);
-    setEndDate(bookingData.endDate);
+  const handleDateRangeChange = (range: { start: Date | null; end: Date | null }) => {
+    if (range.start && range.end) {
+      setStartDate(range.start);
+      setEndDate(range.end);
+    }
   };
   const handleSearchClick = () => {
     if (startDate && endDate) {
@@ -79,7 +81,7 @@ export const HeroSection = () => {
                 </PopoverTrigger>
                 <PopoverContent align="start" sideOffset={5} className="w-auto p-2 mx-[-18px]">
                   <div className="w-full md:w-[700px] max-w-full">
-                    <BookingCalendar onBookingChange={handleBookingChange} initialStartDate={startDate} initialEndDate={endDate} isCompact={true} />
+                    <DateRangePickerRu onChange={handleDateRangeChange} initialStartDate={startDate} initialEndDate={endDate} />
                   </div>
                 </PopoverContent>
               </Popover>
