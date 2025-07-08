@@ -14,6 +14,7 @@ export const HeroSection = () => {
   const [endDate, setEndDate] = useState<Date>();
   const [searchQuery, setSearchQuery] = useState('');
   const [bannerImage, setBannerImage] = useState('public/BG.svg');
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   useEffect(() => {
     const fetchBannerImage = async () => {
       try {
@@ -72,7 +73,7 @@ export const HeroSection = () => {
             <h2 className="text-lg font-medium mb-3">Найдите доступное оборудование</h2>
             
             <div className="flex flex-wrap items-center gap-3 mb-3">
-              <Popover>
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="flex-grow md:flex-grow-0 bg-white/90 text-foreground min-w-[240px] justify-between h-10">
                     {startDate && endDate ? `${format(startDate, 'dd.MM.yyyy HH:00')} - ${format(endDate, 'dd.MM.yyyy HH:00')}` : "Выберите дату и время"}
@@ -81,7 +82,12 @@ export const HeroSection = () => {
                 </PopoverTrigger>
                 <PopoverContent align="start" sideOffset={5} className="w-auto p-2 mx-[-18px]">
                   <div className="w-full md:w-[700px] max-w-full">
-                    <DateRangePickerRu onChange={handleDateRangeChange} initialStartDate={startDate} initialEndDate={endDate} />
+                    <DateRangePickerRu 
+                      onChange={handleDateRangeChange} 
+                      initialStartDate={startDate} 
+                      initialEndDate={endDate}
+                      onDateConfirmed={() => setIsPopoverOpen(false)}
+                    />
                   </div>
                 </PopoverContent>
               </Popover>
