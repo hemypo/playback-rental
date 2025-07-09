@@ -26,12 +26,20 @@ type PromotionFormProps = {
 
 const PromotionForm = ({ promotion, onSubmit, onCancel, isSubmitting }: PromotionFormProps) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(
-    promotion?.imageurl ? promotion.imageurl.startsWith('http') 
-      ? promotion.imageurl 
-      : `https://xwylatyyhqyfwsxfwzmn.supabase.co/storage/v1/object/public/products/${promotion.imageurl}` 
-      : null
-  );
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
+  // Initialize states when editing existing promotion
+  React.useEffect(() => {
+    if (promotion?.imageurl) {
+      const fullUrl = promotion.imageurl.startsWith('http') 
+        ? promotion.imageurl 
+        : `https://xwylatyyhqyfwsxfwzmn.supabase.co/storage/v1/object/public/products/${promotion.imageurl}`;
+      setImageUrl(fullUrl);
+      setImagePreviewUrl(fullUrl);
+      setImageFile(null);
+    }
+  }, [promotion]);
   
   const form = useForm<z.infer<typeof promotionSchema>>({
     resolver: zodResolver(promotionSchema),
@@ -44,11 +52,15 @@ const PromotionForm = ({ promotion, onSubmit, onCancel, isSubmitting }: Promotio
 
   const handleImageChange = (file: File | string) => {
     if (typeof file === 'string') {
+      // External URL provided
+      setImageUrl(file);
       setImagePreviewUrl(file);
       setImageFile(null);
     } else {
+      // File uploaded
       setImageFile(file);
       setImagePreviewUrl(URL.createObjectURL(file));
+      setImageUrl(''); // Clear URL when file is uploaded
     }
   };
 
@@ -56,7 +68,7 @@ const PromotionForm = ({ promotion, onSubmit, onCancel, isSubmitting }: Promotio
     onSubmit({
       title: values.title,
       imageFile,
-      imageUrl: typeof imagePreviewUrl === 'string' ? imagePreviewUrl : undefined,
+      imageUrl: imageUrl || undefined, // Use the stored imageUrl, not the preview URL
       linkUrl: values.linkUrl,
       active: values.active,
     });

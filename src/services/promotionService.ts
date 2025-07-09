@@ -65,6 +65,8 @@ export const createPromotion = async (promotionData: PromotionFormValues): Promi
     console.log('Creating new promotion:', promotionData);
     
     let imageUrl = promotionData.imageUrl || '';
+    console.log('Initial imageUrl:', imageUrl);
+    console.log('Has imageFile:', !!promotionData.imageFile);
     
     // Handle image upload if provided
     if (promotionData.imageFile) {
@@ -77,7 +79,10 @@ export const createPromotion = async (promotionData: PromotionFormValues): Promi
         throw new Error(`Failed to upload image: ${error instanceof Error ? error.message : String(error)}`);
       }
     } else if (!imageUrl) {
+      console.error('No image provided - imageUrl:', imageUrl, 'imageFile:', promotionData.imageFile);
       throw new Error('No image provided for promotion');
+    } else {
+      console.log('Using provided imageUrl:', imageUrl);
     }
     
     // Get the highest current order value to place the new promotion at the end
@@ -123,6 +128,8 @@ export const updatePromotion = async (id: string, promotionData: PromotionFormVa
     console.log(`Updating promotion ${id}:`, promotionData);
     
     let imageUrl = promotionData.imageUrl || '';
+    console.log('Initial imageUrl for update:', imageUrl);
+    console.log('Has imageFile for update:', !!promotionData.imageFile);
     
     // Handle image upload if provided
     if (promotionData.imageFile) {
