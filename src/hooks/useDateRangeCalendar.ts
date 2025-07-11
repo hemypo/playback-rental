@@ -31,7 +31,7 @@ export function useDateRangeCalendar(initialStartDate?: Date, initialEndDate?: D
     initialStartDate ? initialStartDate.getHours().toString() : "10"
   );
   const [endTime, setEndTime] = useState<string>(
-    initialEndDate ? initialEndDate.getHours().toString() : "10"
+    initialEndDate ? initialEndDate.getHours().toString() : "19"
   );
 
   const handlePrevMonth = () => {

@@ -57,6 +57,8 @@ const ProductCardMemo = memo(({
     } else {
       navigate(`/product/${product.id}`, {
         state: {
+          startDate: bookingDates?.startDate,
+          endDate: bookingDates?.endDate,
           scrollTop: true
         }
       });
@@ -121,9 +123,10 @@ const ProductCardMemo = memo(({
       to={`/product/${product.id}`} 
       state={{
         prevPath: window.location.pathname,
-        bookingDates,
+        startDate: bookingDates?.startDate,
+        endDate: bookingDates?.endDate,
         scrollTop: true
-      }} 
+      }}
       className="group block h-full"
     >
       <Card className={`h-full flex flex-col overflow-hidden card-hover ${featured ? 'border-primary/20' : ''}`}>

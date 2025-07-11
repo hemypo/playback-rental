@@ -63,6 +63,8 @@ const ProductCard = ({
     } else {
       navigate(`/product/${product.id}`, {
         state: {
+          startDate: bookingDates?.startDate,
+          endDate: bookingDates?.endDate,
           scrollTop: true
         }
       });
@@ -107,9 +109,10 @@ const ProductCard = ({
       to={`/product/${product.id}`} 
       state={{
         prevPath: window.location.pathname,
-        bookingDates,
+        startDate: bookingDates?.startDate,
+        endDate: bookingDates?.endDate,
         scrollTop: true
-      }} 
+      }}
       className="group block h-full"
     >
       <Card className={`h-full flex flex-col overflow-hidden transition-all hover:shadow-md ${featured ? 'border-primary/20' : ''}`}>
